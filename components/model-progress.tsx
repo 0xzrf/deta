@@ -63,11 +63,14 @@ export function ModelProgress() {
       })
 
       // Update metrics
-      setMetrics(current => ({
-        ...current,
-        totalPairs: current.totalPairs + Math.floor(Math.random() * 50),
-        currentAccuracy: Math.min(95, current.currentAccuracy + Math.random() * 0.01)
-      }))
+      setMetrics(current => {
+        const newAccuracy = Math.min(95, current.currentAccuracy + Math.random() * 0.01)
+        return {
+          ...current,
+          totalPairs: current.totalPairs + Math.floor(Math.random() * 50),
+          currentAccuracy: newAccuracy
+        }
+      })
     }, 3000)
 
     return () => clearInterval(interval)
