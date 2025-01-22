@@ -1,101 +1,217 @@
-import Image from "next/image";
+'use client'
+
+import { AnalyticsDashboard } from "@/components/analytics-dashboard"
+import { TrainingForm } from "@/components/training-form"
+import { ModelProgress } from "@/components/model-progress"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { CheckCircle, Clock } from "lucide-react"
+
+interface Submission {
+  id: string
+  user: string
+  timestamp: Date
+  pairs: number
+  approvalRate: number
+  reward: number
+  status: 'pending' | 'approved'
+}
+
+const rotatingWords = ["Datasets", "Models", "Frameworks", "Toolkits", "AI"]
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [activeView, setActiveView] = useState<'home' | 'training' | 'analytics' | 'progress'>('home')
+  const [currentWordIndex, setCurrentWordIndex] = useState(0)
+  const [submissions, setSubmissions] = useState<Submission[]>([])
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Rotate words every 2 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentWordIndex((prev) => (prev + 1) % rotatingWords.length)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Simulate live submissions
+  useEffect(() => {
+    const generateSubmission = (): Submission => ({
+      id: Math.random().toString(36).substr(2, 9),
+      user: `user_${Math.random().toString(36).substr(2, 6)}`,
+      timestamp: new Date(),
+      pairs: Math.floor(Math.random() * 50) + 1,
+      approvalRate: Math.floor(Math.random() * 30) + 70,
+      reward: Number((Math.random() * 10).toFixed(2)),
+      status: Math.random() > 0.3 ? 'approved' : 'pending'
+    })
+
+    const interval = setInterval(() => {
+      setSubmissions(prev => [generateSubmission(), ...prev].slice(0, 10))
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  if (activeView !== 'home') {
+    return (
+      <div className="relative z-10">
+        {/* Navigation Tabs */}
+        <div className="mb-8">
+          <div className="mx-auto max-w-3xl">
+            <div className="glass-card p-1">
+              <div className="grid grid-cols-4 gap-1">
+                {['home', 'training', 'analytics', 'progress'].map((view) => (
+                  <button
+                    key={view}
+                    onClick={() => setActiveView(view as typeof activeView)}
+                    className={`rounded-lg px-4 py-3 text-sm font-medium transition-all ${
+                      activeView === view 
+                        ? 'bg-white text-black shadow-lg' 
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {view.charAt(0).toUpperCase() + view.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Main Content */}
+        <div className="mx-auto max-w-screen-xl">
+          <div className={`glass-card p-6 transition-all duration-300`}>
+            {activeView === 'training' && <TrainingForm />}
+            {activeView === 'analytics' && <AnalyticsDashboard />}
+            {activeView === 'progress' && <ModelProgress />}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative z-10">
+      {/* Navigation */}
+      <div className="mb-8">
+        <div className="mx-auto max-w-3xl">
+          <div className="glass-card p-1">
+            <div className="grid grid-cols-4 gap-1">
+              {['home', 'training', 'analytics', 'progress'].map((view) => (
+                <button
+                  key={view}
+                  onClick={() => setActiveView(view as typeof activeView)}
+                  className={`rounded-lg px-4 py-3 text-sm font-medium transition-all ${
+                    activeView === view 
+                      ? 'bg-white text-black shadow-lg' 
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {view.charAt(0).toUpperCase() + view.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Updated Hero Section */}
+      <div className="mx-auto max-w-4xl text-center py-20">
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight flex flex-col gap-4">
+          <span>Decentralized</span>
+          <AnimatePresence mode='wait'>
+            <motion.span
+              key={rotatingWords[currentWordIndex]}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ 
+                duration: 0.2,
+                ease: "easeOut"
+              }}
+              className="inline-block text-[#00FF95]"
+              style={{
+                textShadow: '0 0 20px rgba(0, 255, 149, 0.3)'
+              }}
+            >
+              {rotatingWords[currentWordIndex]}
+            </motion.span>
+          </AnimatePresence>
+        </h1>
+        <p className="mt-6 text-lg text-gray-400 max-w-2xl mx-auto">
+          Join the future of decentralized AI training. Contribute to the network and earn rewards.
+        </p>
+      </div>
+
+      {/* Updated Live Feed Section with colored shake animation */}
+      <div className="mx-auto max-w-2xl">
+        <div className="glass-card p-6">
+          <h2 className="text-xl font-semibold mb-6">Live Training Feed</h2>
+          <div className="space-y-4">
+            <AnimatePresence initial={false}>
+              {submissions.map((submission) => (
+                <motion.div
+                  key={submission.id}
+                  initial={{ 
+                    opacity: 0, 
+                    y: -20,
+                    boxShadow: '0 0 0 rgba(0, 255, 149, 0)'
+                  }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0,
+                    x: [0, -3, 3, -3, 3, 0],
+                    boxShadow: [
+                      '0 0 0 rgba(0, 255, 149, 0)',
+                      '0 0 20px rgba(0, 255, 149, 0.3)',
+                      '0 0 0 rgba(0, 255, 149, 0)'
+                    ]
+                  }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ 
+                    duration: 0.5,
+                    x: { 
+                      duration: 0.4, 
+                      times: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                      ease: "easeInOut"
+                    },
+                    boxShadow: {
+                      duration: 1,
+                      repeat: 0
+                    }
+                  }}
+                  className="flex items-center justify-between p-4 rounded-lg bg-black/20 border border-white/5
+                    hover:border-[#00FF95]/20 transition-colors duration-300"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
+                      {submission.status === 'approved' ? (
+                        <CheckCircle className="h-4 w-4 text-success" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-gray-400 animate-pulse" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{submission.user}</p>
+                      <p className="text-xs text-gray-400">
+                        {submission.pairs} pairs submitted
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-success">
+                      +{submission.reward} DeAI
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {submission.approvalRate}% approval
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
+

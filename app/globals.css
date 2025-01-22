@@ -3,25 +3,271 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0A0A0A;
+  --foreground: #ffffff;
+  --muted: #1A1A1A;
+  --muted-foreground: #A1A1AA;
+  --card: rgba(26, 26, 26, 0.7);
+  --card-hover: rgba(26, 26, 26, 0.8);
+  --border: rgba(63, 63, 70, 0.4);
+  --border-bright: rgba(255, 255, 255, 0.1);
+  --success: #00FF95;
+  --accent: #00FF95;
+  --accent-foreground: #000000;
 }
 
 body {
+  background-color: var(--background);
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.015), transparent 25%),
+    radial-gradient(circle at 85% 50%, rgba(255, 255, 255, 0.015), transparent 25%);
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* Glass card effect */
+.glass-card {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.glass-card:hover {
+  background: var(--card-hover);
+  border-color: var(--border-bright);
+}
+
+/* Button styles */
+.primary-button {
+  background: white;
+  color: black;
+  padding: 0.75rem 1.5rem;
+  border-radius: 100px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.primary-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Stats card */
+.stats-card {
+  background: rgba(26, 26, 26, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-bright);
+}
+
+/* Progress bar */
+.progress-bar {
+  background: linear-gradient(90deg, var(--success) 0%, rgba(0, 255, 149, 0.2) 100%);
+  border-radius: 100px;
+  height: 4px;
+}
+
+/* Glow effects */
+.glow {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.glow-text {
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+/* Modal-style inputs */
+input, textarea, select {
+  background: rgba(26, 26, 26, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: var(--foreground);
+  transition: all 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--border-bright);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive container widths */
+@media (max-width: 640px) {
+  .container {
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
+
+/* Responsive text sizes */
+@media (max-width: 768px) {
+  h2 {
+    font-size: 1.25rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.5rem;
+  }
+}
+
+/* Responsive spacing */
+@media (max-width: 640px) {
+  .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1.5rem;
+  }
+  
+  .gap-8 {
+    gap: 1rem;
+  }
+}
+
+/* Better mobile form inputs */
+@media (max-width: 640px) {
+  textarea, input {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+}
+
+/* Improved modal responsiveness */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 90%;
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+}
+
+/* Modal.com style card */
+.modal-card {
+  background: rgba(26, 26, 26, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  backdrop-filter: blur(12px);
+}
+
+.modal-card:hover {
+  border-color: var(--border-bright);
+}
+
+/* Updated text gradient */
+.text-gradient {
+  color: var(--success);
+}
+
+/* Modal.com style inputs */
+input, textarea, select {
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--foreground);
+  transition: all 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(92, 124, 255, 0.2);
+}
+
+/* Modal-style scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Update background opacity for better contrast */
+.bg-\[\#1e293b\]\/50 {
+  background-color: rgba(26, 15, 46, 0.7) !important;
+}
+
+/* Neur-style animations */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.button-gradient {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  transition: all 0.2s ease;
+  border-radius: 100px;
+  font-weight: 500;
+}
+
+.button-gradient:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Refined glass morphism */
+.backdrop-blur-sm {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Modal-style text */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* Modal-style input fields */
+input, textarea {
+  background: rgba(17, 17, 17, 0.7);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+input:focus, textarea:focus {
+  border-color: rgba(92, 124, 255, 0.3);
+  box-shadow: 0 0 0 2px rgba(92, 124, 255, 0.1);
+}
+
