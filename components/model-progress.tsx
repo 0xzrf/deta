@@ -53,10 +53,10 @@ export function ModelProgress() {
         // Update block statuses
         return newBlocks.map(block => {
           if (block.status === 'pending') {
-            return { ...block, status: 'processing' }
+            return { ...block, status: 'processing' as 'processing' }
           }
           if (block.status === 'processing') {
-            return { ...block, status: 'completed' }
+            return { ...block, status: 'completed' as 'completed' }
           }
           return block
         }).slice(-6) // Keep only last 6 blocks
