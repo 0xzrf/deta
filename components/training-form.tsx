@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useRef } from "react"
 import { 
-  ChevronDown, ChevronUp, Plus, X, Wallet, Info, Upload, FileText,
+  ChevronDown, Plus, X, Wallet, Info, Upload, FileText,
   Clock, Loader2, CheckCircle, XCircle, Brain, Filter, Award
 } from "lucide-react"
 import { ApprovalRateModal } from "./approval-rate-modal"
 import { useWallet } from "@/contexts/wallet-context"
-import { SubmissionProcessing } from "./submission-processing"
 
 interface QAPair {
   id: number
@@ -55,8 +54,8 @@ export function TrainingForm() {
     totalReward: number
     qualityScore: number
   } | null>(null)
-  const [currentStep, setCurrentStep] = useState(0)
-  const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([
+  const [currentStep] = useState(0)
+  const [processingSteps] = useState<ProcessingStep[]>([
     {
       id: 1,
       title: "Initializing AI Filter",
@@ -212,8 +211,8 @@ export function TrainingForm() {
         })
       } else {
         // Parse JSON
-        const jsonData = JSON.parse(content)
-        parsedData = jsonData.map((item: any, index: number) => ({
+        const jsonData: { question: string; answer: string }[] = JSON.parse(content)
+        parsedData = jsonData.map((item, index) => ({
           id: Date.now() + index,
           question: item.question,
           answer: item.answer,
