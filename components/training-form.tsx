@@ -394,7 +394,7 @@ export function TrainingForm() {
                 </div>
                 <div className="rounded-md bg-black/20 p-4">
                   <p className="text-2xl font-bold text-gradient">
-                    {submissionResults.totalReward.toFixed(1)} DeAI
+                    {submissionResults.totalReward.toFixed(1)} $DeTA
                   </p>
                   <p className="text-sm text-gray-400">Total Reward</p>
                 </div>
@@ -421,7 +421,7 @@ export function TrainingForm() {
                     Session Reward:
                   </span>
                   <span className="text-gradient font-semibold">
-                    {totalEstimatedReward.toFixed(1)} DeAI
+                    {totalEstimatedReward.toFixed(1)} $DeTA
                   </span>
                 </div>
               </div>
@@ -498,7 +498,7 @@ export function TrainingForm() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-gradient">
-                            {pair.estimatedReward?.toFixed(1)} DeAI
+                            {pair.estimatedReward?.toFixed(1)} $DeTA
                           </span>
                           <button
                             onClick={() => toggleCollapse(pair.id)}
@@ -546,7 +546,7 @@ export function TrainingForm() {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gradient">
-                            Estimated: {pair.estimatedReward?.toFixed(1)} DeAI
+                            Estimated: {pair.estimatedReward?.toFixed(1)} $DeTA
                           </span>
                           <button
                             onClick={() => toggleCollapse(pair.id)}
@@ -572,9 +572,9 @@ export function TrainingForm() {
 
                 <button
                   onClick={handleSubmit}
-                  className={`button-gradient rounded-md px-6 py-2 text-sm font-medium text-white flex items-center gap-2 ${
-                    !isConnected && 'opacity-50'
-                  }`}
+                  className={`rounded-full px-4 py-2 text-sm font-medium
+                    button-gradient-border text-[#00FF95]
+                    transition-all duration-300 flex items-center gap-2`}
                 >
                   {!isConnected ? (
                     <>
@@ -604,7 +604,7 @@ export function TrainingForm() {
               </div>
               <div className="rounded-md bg-black/20 p-4">
                 <p className="text-2xl font-bold text-gradient">
-                  {totalEstimatedReward.toFixed(1)}
+                  {totalEstimatedReward.toFixed(1)} $DeTA
                 </p>
                 <p className="text-sm text-gray-400">Session Estimate</p>
               </div>
@@ -638,21 +638,23 @@ export function TrainingForm() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Available to Claim</span>
-                  <span className="text-gradient font-semibold">35.2 DeAI</span>
+                  <span className="text-gradient font-semibold">35.2 $DeTA</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Total Claimed</span>
-                  <span className="text-white">210.6 DeAI</span>
+                  <span className="text-white">210.6 $DeTA</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Pending Approval</span>
-                  <span className="text-white">{totalEstimatedReward.toFixed(1)} DeAI</span>
+                  <span className="text-white">{totalEstimatedReward.toFixed(1)} $DeTA</span>
                 </div>
                 
                 {!isConnected ? (
                   <button
                     onClick={connectWallet}
-                    className="w-full mt-4 button-gradient rounded-md px-4 py-3 text-sm font-medium text-white flex items-center justify-center gap-2"
+                    className="w-full mt-4 rounded-full px-4 py-2 text-sm font-medium
+                      button-gradient-border text-[#00FF95]
+                      transition-all duration-300 flex items-center justify-center gap-2"
                   >
                     <Wallet className="h-4 w-4" />
                     Connect Wallet to Claim
@@ -660,9 +662,11 @@ export function TrainingForm() {
                 ) : (
                   <button
                     onClick={claimRewards}
-                    className="w-full mt-4 button-gradient rounded-md px-4 py-3 text-sm font-medium text-white"
+                    className="rounded-full px-4 py-2 text-sm font-medium
+                      button-gradient-border text-[#00FF95]
+                      transition-all duration-300 flex items-center gap-2"
                   >
-                    Claim Available Rewards
+                    Claim Rewards
                   </button>
                 )}
               </div>

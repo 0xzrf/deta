@@ -1,11 +1,11 @@
 'use client'
 
 import { AnalyticsDashboard } from "@/components/analytics-dashboard"
-import { TrainingForm } from "@/components/training-form"
 import { ModelProgress } from "@/components/model-progress"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle, Clock } from "lucide-react"
+import { CheckCircle, Clock, ArrowRight, ArrowUpRight } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface Submission {
   id: string
@@ -20,9 +20,9 @@ interface Submission {
 const rotatingWords = ["Datasets", "Models", "Frameworks", "Toolkits", "AI"]
 
 export default function Home() {
-  const [activeView, setActiveView] = useState<'home' | 'training' | 'analytics' | 'progress'>('home')
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [submissions, setSubmissions] = useState<Submission[]>([])
+  const router = useRouter()
 
   // Rotate words every 2 seconds
   useEffect(() => {
@@ -51,69 +51,8 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [])
 
-  if (activeView !== 'home') {
-    return (
-      <div className="relative z-10">
-        {/* Navigation Tabs */}
-        <div className="mb-8">
-          <div className="mx-auto max-w-3xl">
-            <div className="glass-card p-1">
-              <div className="grid grid-cols-4 gap-1">
-                {['home', 'training', 'analytics', 'progress'].map((view) => (
-                  <button
-                    key={view}
-                    onClick={() => setActiveView(view as typeof activeView)}
-                    className={`rounded-lg px-4 py-3 text-sm font-medium transition-all ${
-                      activeView === view 
-                        ? 'bg-white text-black shadow-lg' 
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    {view.charAt(0).toUpperCase() + view.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="mx-auto max-w-screen-xl">
-          <div className={`glass-card p-6 transition-all duration-300`}>
-            {activeView === 'training' && <TrainingForm />}
-            {activeView === 'analytics' && <AnalyticsDashboard />}
-            {activeView === 'progress' && <ModelProgress />}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="relative z-10">
-      {/* Navigation */}
-      <div className="mb-8">
-        <div className="mx-auto max-w-3xl">
-          <div className="glass-card p-1">
-            <div className="grid grid-cols-4 gap-1">
-              {['home', 'training', 'analytics', 'progress'].map((view) => (
-                <button
-                  key={view}
-                  onClick={() => setActiveView(view as typeof activeView)}
-                  className={`rounded-lg px-4 py-3 text-sm font-medium transition-all ${
-                    activeView === view 
-                      ? 'bg-white text-black shadow-lg' 
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {view.charAt(0).toUpperCase() + view.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Updated Hero Section */}
       <div className="mx-auto max-w-4xl text-center py-20">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight flex flex-col gap-4">
@@ -138,8 +77,57 @@ export default function Home() {
           </AnimatePresence>
         </h1>
         <p className="mt-6 text-lg text-gray-400 max-w-2xl mx-auto">
-          Join the future of decentralized AI training. Contribute to the network and earn rewards.
+          Join the future of decentralized training. Contribute to the network and earn $DeTA rewards.
         </p>
+
+        {/* Get Started Button */}
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="mt-6 mb-12 rounded-full px-8 py-3 text-base font-medium
+              button-gradient-border group text-[#00FF95]
+              transition-all duration-300 flex items-center gap-2"
+          >
+            Get Started
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+          <button
+            onClick={() => router.push('/swap')}
+            className="mt-6 mb-12 rounded-full px-8 py-3 text-base font-medium
+              button-gradient-border group text-[#00FF95]
+              transition-all duration-300 flex items-center gap-2"
+          >
+            Buy $DeTA
+            <ArrowUpRight className="h-4 w-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+
+      {/* Platform Metrics */}
+      <div className="mx-auto max-w-3xl -mt-24 mb-12">
+        <div className="relative px-6 py-4 rounded-2xl backdrop-blur-sm
+          bg-black/20"
+        >
+          <div className="grid grid-cols-3 divide-x divide-[#00FF95]/10">
+            <div className="px-6 text-center">
+              <p className="text-2xl font-bold">156,842</p>
+              <h3 className="text-xs text-gray-400">Total Submissions</h3>
+              <a href="#" className="text-xs text-[#00FF95]/80 hover:text-[#00FF95] transition-colors">Know More ↗</a>
+            </div>
+            
+            <div className="px-6 text-center">
+              <p className="text-2xl font-bold text">24,156</p>
+              <h3 className="text-xs text-gray-400">Active Users</h3>
+              <a href="#" className="text-xs text-[#00FF95]/80 hover:text-[#00FF95] transition-colors">Know More ↗</a>
+            </div>
+            
+            <div className="px-6 text-center">
+              <p className="text-2xl font-bold text-[#00FF95]">1.25M</p>
+              <h3 className="text-xs text-gray-400">$DeTA Distributed</h3>
+              <a href="#" className="text-xs text-[#00FF95]/80 hover:text-[#00FF95] transition-colors">Know More ↗</a>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Updated Live Feed Section with colored shake animation */}
@@ -198,8 +186,14 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-success">
-                      +{submission.reward} DeAI
+                    <p className="text-sm font-medium">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="text-success">+</span>
+                        <span className="text-gradient font-bold glow-text">
+                          {submission.reward}
+                        </span>
+                        <span className="text-xs text-success/80">$DeTA</span>
+                      </span>
                     </p>
                     <p className="text-xs text-gray-400">
                       {submission.approvalRate}% approval

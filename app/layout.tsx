@@ -6,8 +6,8 @@ import { WalletProvider } from "@/contexts/wallet-context"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "DeAI Platform",
-  description: "Decentralized AI Training Platform",
+  title: "DeTA",
+  description: "Decentralized Training Assistant",
 }
 
 export default function RootLayout({

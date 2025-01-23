@@ -1,6 +1,6 @@
-# DeAI Platform
+# DeTA
 
-Welcome to the DeAI Platform, a decentralized AI training platform where you can contribute to the network and earn rewards.
+Welcome to DeTA (Decentralized Training Assistant), a decentralized AI training platform where you can contribute to the network and earn rewards.
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@ Welcome to the DeAI Platform, a decentralized AI training platform where you can
 
 ## Introduction
 
-The DeAI Platform is designed to facilitate decentralized AI training. It allows users to submit datasets, train models, and track progress through a user-friendly interface.
+DeTA is designed to facilitate decentralized AI training. It allows users to submit datasets, train models, and track progress through a user-friendly interface.
 
 ## Features
 
@@ -23,7 +23,7 @@ The DeAI Platform is designed to facilitate decentralized AI training. It allows
 
 ## Installation
 
-To get started with the DeAI Platform, follow these steps:
+To get started with DeTA, follow these steps:
 
 1. Clone the repository:
    ```bash
@@ -32,7 +32,7 @@ To get started with the DeAI Platform, follow these steps:
 
 2. Navigate to the project directory:
    ```bash
-   cd deai-platform
+   cd deta
    ```
 
 3. Install dependencies:
@@ -51,7 +51,7 @@ Once the development server is running, you can access the platform at `http://l
 
 ## Contributing
 
-We welcome contributions to the DeAI Platform! If you have suggestions or improvements, please open an issue or submit a pull request.
+We welcome contributions to DeTA! If you have suggestions or improvements, please open an issue or submit a pull request.
 
 ## License
 
