@@ -1,20 +1,22 @@
 "use client"
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function SwapPage() {
   const router = useRouter()
+  const chartContainerRef = useRef<HTMLDivElement>(null)
+
   // Initialize Coingecko widget
   useEffect(() => {
     const script = document.createElement('script')
     script.src = "https://widgets.coingecko.com/coingecko-coin-price-chart-widget.js"
     script.async = true
-    document.body.appendChild(script)
+    chartContainerRef.current?.appendChild(script)
 
     return () => {
-      document.body.removeChild(script)
+      chartContainerRef.current?.removeChild(script)
     }
   }, [])
 
@@ -35,14 +37,14 @@ export default function SwapPage() {
         {/* Chart Section */}
         <div className="glass-card p-6">
           <h2 className="text-xl font-medium mb-4">Price Chart</h2>
-          <div className="rounded-lg overflow-hidden">
+          <div className="rounded-lg overflow-hidden" ref={chartContainerRef}>
             <coingecko-coin-price-chart-widget
               coin-id="deta"
               currency="usd"
               height="400"
               locale="en"
               background-color="#000000"
-            ></coingecko-coin-price-chart-widget>
+            />
           </div>
         </div>
 
