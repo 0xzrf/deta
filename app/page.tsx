@@ -1,8 +1,6 @@
 'use client'
 
-import { AnalyticsDashboard } from "@/components/analytics-dashboard"
-import { ModelProgress } from "@/components/model-progress"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CheckCircle, Clock, ArrowRight, ArrowUpRight } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -24,6 +22,17 @@ export default function Home() {
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const router = useRouter()
 
+  // Extract the complex expression into a memoized function
+  const generateSubmission = useCallback((): Submission => ({
+    id: Math.random().toString(36).substr(2, 9),
+    user: `user_${Math.random().toString(36).substr(2, 6)}`,
+    timestamp: new Date(),
+    pairs: Math.floor(Math.random() * 50) + 1,
+    approvalRate: Math.floor(Math.random() * 30) + 70,
+    reward: Number((Math.random() * 10).toFixed(2)),
+    status: Math.random() > 0.3 ? 'approved' : 'pending'
+  }), [])
+
   // Rotate words every 2 seconds
   useEffect(() => {
     const interval = setInterval(() => {
@@ -34,22 +43,12 @@ export default function Home() {
 
   // Simulate live submissions
   useEffect(() => {
-    const generateSubmission = (): Submission => ({
-      id: Math.random().toString(36).substr(2, 9),
-      user: `user_${Math.random().toString(36).substr(2, 6)}`,
-      timestamp: new Date(),
-      pairs: Math.floor(Math.random() * 50) + 1,
-      approvalRate: Math.floor(Math.random() * 30) + 70,
-      reward: Number((Math.random() * 10).toFixed(2)),
-      status: Math.random() > 0.3 ? 'approved' : 'pending'
-    })
-
     const interval = setInterval(() => {
       setSubmissions(prev => [generateSubmission(), ...prev].slice(0, 10))
     }, 3000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [generateSubmission])
 
   return (
     <div className="relative z-10">
