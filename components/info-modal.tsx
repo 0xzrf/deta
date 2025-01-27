@@ -10,7 +10,12 @@ interface InfoModalProps {
   content: string
   data?: {
     type: 'line' | 'bar' | 'pie'
-    values: any[]
+    values: {
+      name: string
+      value: number
+      description?: string
+      color?: string
+    }[]
     description: string
     trend?: {
       value: number
@@ -131,29 +136,15 @@ export function InfoModal({ title, content, data, onClose }: InfoModalProps) {
                     cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                   />
                   <Legend 
-                    formatter={(value, entry) => (
+                    formatter={(legendValue) => (
                       <span className="text-gray-400 hover:text-white transition-colors">
-                        {value}
+                        {legendValue}
                       </span>
                     )}
                   />
                   <Bar 
                     dataKey="value" 
                     radius={[4, 4, 0, 0]}
-                    onMouseEnter={(data, index) => {
-                      const cell = document.querySelector(`[name="Cell-${index}"]`)
-                      if (cell) {
-                        const color = data.color || COLORS[index % COLORS.length]
-                        cell.setAttribute('fill', HOVER_COLORS[color] || color)
-                      }
-                    }}
-                    onMouseLeave={(data, index) => {
-                      const cell = document.querySelector(`[name="Cell-${index}"]`)
-                      if (cell) {
-                        const color = data.color || COLORS[index % COLORS.length]
-                        cell.setAttribute('fill', color)
-                      }
-                    }}
                   >
                     {data.values.map((entry, index) => (
                       <Cell 
@@ -234,7 +225,7 @@ export function InfoModal({ title, content, data, onClose }: InfoModalProps) {
                     activeDot={{ r: 6, fill: '#00FF95' }}
                   />
                   <Legend 
-                    formatter={(value) => (
+                    formatter={() => (
                       <span className="text-gray-400 hover:text-white transition-colors">
                         Distribution Percentage
                       </span>

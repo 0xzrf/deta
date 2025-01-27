@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ChevronDown, BookOpen, GraduationCap, MessageSquareText, TrendingUp, BarChart3, Wallet, User } from "lucide-react"
+import { BookOpen, GraduationCap, MessageSquareText, TrendingUp, BarChart3, Wallet, User } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useWallet } from "@/contexts/wallet-context"
 

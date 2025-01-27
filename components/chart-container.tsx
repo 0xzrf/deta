@@ -1,21 +1,23 @@
+"use client"
+
 import { useRef, useEffect } from 'react'
 
 export function ChartContainer() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Store the ref value immediately
-    const chartContainer = chartContainerRef.current
-    
+    // Store the ref value immediately at the start of the effect
+    const currentContainer = chartContainerRef.current
+
     // Initialize chart
-    if (chartContainer) {
-      // Chart initialization code here
+    if (currentContainer) {
+      // Chart initialization code here using currentContainer
     }
 
     // Cleanup function uses the stored reference
     return () => {
-      if (chartContainer) {
-        // Cleanup code here
+      if (currentContainer) {
+        // Cleanup code here using currentContainer
       }
     }
   }, []) // Empty dependency array if the chart only needs to be initialized once

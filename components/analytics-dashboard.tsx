@@ -1,11 +1,9 @@
 "use client"
 
 import { useState, useMemo, useCallback, useEffect } from "react"
-import { Info, TrendingUp, Users, Database, Award, Clock, HelpCircle } from "lucide-react"
+import { Info, TrendingUp, Users, Database, Award, HelpCircle } from "lucide-react"
 import { AnimatePresence } from "framer-motion"
 import { InfoModal } from "./info-modal"
-import { SubmissionProcessing } from "./submission-processing"
-import { useWallet } from "@solana/wallet-adapter-react"
 
 interface ChartValue {
   name: string
@@ -34,9 +32,8 @@ interface MetricCard {
 
 export function AnalyticsDashboard() {
   const [activeInfoModal, setActiveInfoModal] = useState<string | null>(null)
-  const { publicKey } = useWallet()
 
-  const metrics: MetricCard[] = [
+  const metrics = useMemo<MetricCard[]>(() => [
     {
       title: "Total Data Points",
       value: "156,842",
@@ -116,9 +113,9 @@ export function AnalyticsDashboard() {
       icon: <Award className="h-5 w-5" />,
       color: "text-[#00FF95]"
     }
-  ]
+  ], [])
 
-  const networkStats = [
+  const networkStats = useMemo(() => [
     {
       title: "Average Response Time",
       value: "1.2s",
@@ -165,7 +162,7 @@ export function AnalyticsDashboard() {
         description: "Weekly progress towards the next model iteration. Target: 100,000 validated pairs"
       }
     }
-  ]
+  ], [])
 
   const modalContent = useMemo(() => {
     if (activeInfoModal === "network-health") {

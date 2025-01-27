@@ -183,7 +183,7 @@ export default function ProfilePage() {
                         <div className="space-y-1">
                           <p className="text-gray-300">
                             <span className="font-medium text-white">What to Submit</span><br />
-                            Share your knowledge about Solana! Write questions and answers about using Solana, common problems, or how things work. The more helpful your content is, the more <span className="text-[#00FF95] font-semibold">$DeTA</span> you'll earn.
+                            Share your knowledge about Solana! Write questions and answers about using Solana, common problems, or how things work. The more helpful your content is, the more <span className="text-[#00FF95] font-semibold">$DeTA</span> you&apos;ll earn.
                           </p>
                           <a 
                             href="https://github.com/yourusername/your-repo/docs/solana-guidelines.md" 
@@ -198,7 +198,7 @@ export default function ProfilePage() {
                         <div className="space-y-1">
                           <p className="text-gray-300">
                             <span className="font-medium text-white">Quality Tips</span><br />
-                            Make your answers clear and complete. Include examples when possible. The better your answers help others, the more rewards you'll get!
+                            Make your answers clear and complete. Include examples when possible. The better your answers help others, the more rewards you&apos;ll get!
                           </p>
                           <a 
                             href="https://github.com/yourusername/your-repo/docs/writing-tips.md"
@@ -213,7 +213,7 @@ export default function ProfilePage() {
                         <div className="space-y-1">
                           <p className="text-gray-300">
                             <span className="font-medium text-white">Earning More</span><br />
-                            Keep submitting good content and maintain a high approval rate. The more your submissions get approved, the more <span className="text-[#00FF95] font-semibold">$DeTA</span> you'll earn with bonus multipliers!
+                            Keep submitting good content and maintain a high approval rate. The more your submissions get approved, the more <span className="text-[#00FF95] font-semibold">$DeTA</span> you&apos;ll earn with bonus multipliers!
                           </p>
                           <a 
                             href="https://github.com/yourusername/your-repo/docs/rewards-guide.md"
