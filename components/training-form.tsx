@@ -206,7 +206,8 @@ export function TrainingForm() {
   }
 
   const approvalRate = 90.5 // This should come from your data
-  const approvalMultiplier = getApprovalRateMultiplier(approvalRate)
+  // Remove or use approvalMultiplier
+  // const approvalMultiplier = getApprovalRateMultiplier(approvalRate)
 
   const handleFileUpload = async (file: File) => {
     try {
@@ -337,7 +338,6 @@ export function TrainingForm() {
       // Simulate AI validation
       await new Promise(resolve => setTimeout(resolve, 1500))
 
-      // Simulate validation result
       const isAccepted = Math.random() > 0.2 // 80% acceptance rate
       const validationMessage = isAccepted 
         ? 'Meets quality standards'
@@ -427,44 +427,19 @@ export function TrainingForm() {
                   >
                     {pair.isCollapsed ? (
                       <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-white truncate">
-                            Q: {pair.question}
-                          </p>
-                          <p className="text-sm text-gray-400 truncate">
-                            A: {pair.answer}
-                          </p>
-                          {pair.validationStatus && (
-                            <div className="mt-2">
-                              <ValidationStatus 
-                                status={pair.validationStatus}
-                                message={pair.validationMessage}
-                              />
-                            </div>
-                          )}
+                        <div>
+                          <p className="text-sm text-gray-400">{pair.question}</p>
+                          <p className="text-sm text-gray-400">{pair.answer}</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gradient">
-                            {pair.estimatedReward?.toFixed(1)} $DeTA
-                          </span>
-                          <button
-                            onClick={() => toggleCollapse(pair.id)}
-                            className="p-1 text-gray-400 hover:text-white"
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                          </button>
-                          {!isProcessing && (
-                            <button
-                              onClick={() => removePair(pair.id)}
-                              className="p-1 text-gray-400 hover:text-red-500"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
+                        <button
+                          onClick={() => toggleCollapse(pair.id)}
+                          className="rounded-md px-3 py-1 text-sm text-gray-400 hover:text-white"
+                        >
+                          Expand
+                        </button>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <div>
                           <label className="mb-2 block text-sm font-medium text-gray-300">
                             Question

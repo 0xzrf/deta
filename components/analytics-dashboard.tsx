@@ -193,17 +193,18 @@ export function AnalyticsDashboard() {
     }
   }, [])
 
-  const calculateApprovalRate = useCallback(() => {
-    // ... calculation logic
-  }, [/* relevant dependencies */])
+  // Remove unused functions if they are not needed
+  // const calculateApprovalRate = useCallback(() => {
+  //   // ... calculation logic
+  // }, [/* relevant dependencies */])
 
-  const calculateMultiplier = useCallback(() => {
-    // ... calculation logic
-  }, [/* relevant dependencies */])
+  // const calculateMultiplier = useCallback(() => {
+  //   // ... calculation logic
+  // }, [/* relevant dependencies */])
 
-  const updateStats = useCallback(() => {
-    // ... update logic
-  }, [/* relevant dependencies */])
+  // const updateStats = useCallback(() => {
+  //   // ... update logic
+  // }, [/* relevant dependencies */])
 
   return (
     <div className="space-y-6">
