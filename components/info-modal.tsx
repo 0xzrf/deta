@@ -30,12 +30,6 @@ interface InfoModalProps {
 }
 
 const COLORS = ['#00FF95', '#6366f1', '#ec4899', '#f59e0b']
-const HOVER_COLORS = {
-  '#00FF95': '#00cc78', // Darker green on hover
-  '#6366f1': '#4f46e5', // Darker indigo on hover
-  '#ec4899': '#db2777', // Darker pink on hover
-  '#f59e0b': '#d97706'  // Darker amber on hover
-}
 
 export function InfoModal({ title, content, data, onClose }: InfoModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)

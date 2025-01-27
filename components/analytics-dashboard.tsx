@@ -179,10 +179,19 @@ export function AnalyticsDashboard() {
   }, [activeInfoModal, networkStats, metrics])
 
   useEffect(() => {
-    calculateApprovalRate()
-    calculateMultiplier()
-    updateStats()
-  }, [calculateApprovalRate, calculateMultiplier, updateStats])
+    const currentChart = chartRef.current
+    
+    // Chart initialization
+    if (currentChart) {
+      // Initialize chart
+    }
+
+    return () => {
+      if (currentChart) {
+        // Cleanup
+      }
+    }
+  }, [])
 
   const calculateApprovalRate = useCallback(() => {
     // ... calculation logic

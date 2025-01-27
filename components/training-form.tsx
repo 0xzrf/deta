@@ -43,7 +43,7 @@ export function TrainingForm() {
     question: "", 
     answer: "", 
     isCollapsed: false,
-    estimatedReward: 0
+    estimatedReward: undefined
   }])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [fileUpload, setFileUpload] = useState<FileUploadState>({
@@ -126,9 +126,9 @@ export function TrainingForm() {
   }, [calculateApprovalRate])
 
   // Apply multiplier to rewards
-  const calculateFinalReward = (baseReward: number) => {
+  const calculateFinalReward = useCallback((baseReward: number) => {
     return baseReward * calculateMultiplier()
-  }
+  }, [calculateMultiplier])
 
   const handleAddPair = () => {
     const lastPair = qaPairs[qaPairs.length - 1]
@@ -170,9 +170,19 @@ export function TrainingForm() {
   }
 
   const handleChange = (id: number, field: 'question' | 'answer', value: string) => {
-    setQaPairs(qaPairs.map(pair =>
-      pair.id === id ? { ...pair, [field]: value } : pair
-    ))
+    setQaPairs(qaPairs.map(pair => {
+      if (pair.id === id) {
+        const updatedPair = { ...pair, [field]: value }
+        // Calculate estimated reward when content changes
+        const baseReward = calculateReward(
+          field === 'question' ? value : updatedPair.question,
+          field === 'answer' ? value : updatedPair.answer
+        )
+        updatedPair.estimatedReward = calculateFinalReward(baseReward)
+        return updatedPair
+      }
+      return pair
+    }))
   }
 
   const removePair = (id: number) => {
@@ -365,7 +375,7 @@ export function TrainingForm() {
       submittedPairs: qaPairs.length,
       sessionEstimate: qaPairs.reduce((sum, p) => sum + (p.estimatedReward || 0), 0),
       approvalRate: calculateApprovalRate(),
-      approvalMultiplier: calculateMultiplier()
+      multiplier: calculateMultiplier()
     })
   }, [qaPairs, calculateApprovalRate, calculateMultiplier, updateStats])
 
