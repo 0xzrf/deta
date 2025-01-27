@@ -1,181 +1,277 @@
 "use client"
 
-import { Info, TrendingUp, Users, Box, Award, Zap } from "lucide-react"
 import { useState } from "react"
-import { ApprovalRateModal } from "./approval-rate-modal"
+import { Info, TrendingUp, Users, Database, Award, Clock, HelpCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { InfoModal } from "./info-modal"
+
+interface MetricCard {
+  title: string
+  value: string | number
+  description: string
+  chartData?: {
+    type: 'line' | 'bar' | 'pie'
+    values: any[]
+    description: string
+    additionalInfo?: { title: string; content: string }[]
+  }
+  trend?: {
+    value: number
+    timeframe: string
+  }
+  icon: JSX.Element
+  color: string
+}
 
 export function AnalyticsDashboard() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [activeInfoModal, setActiveInfoModal] = useState<string | null>(null)
+
+  const metrics: MetricCard[] = [
+    {
+      title: "Total Data Points",
+      value: "156,842",
+      description: "Total number of Q&A pairs submitted to the network",
+      chartData: {
+        type: 'line',
+        values: [
+          { name: 'Beta V1', value: 25000 },
+          { name: 'Beta V2', value: 65000 },
+          { name: 'Public 1.0', value: 98000 },
+          { name: 'Public 2.0', value: 135000 },
+          { name: 'Public 3.0', value: 156842 }
+        ],
+        description: "Growth in total submissions across different network versions"
+      },
+      trend: {
+        value: 23.5,
+        timeframe: "vs last version"
+      },
+      icon: <Database className="h-5 w-5" />,
+      color: "text-purple-400"
+    },
+    {
+      title: "Active Contributors",
+      value: "24,156",
+      description: "Users who submitted data in the last 30 days",
+      chartData: {
+        type: 'bar',
+        values: [
+          { name: 'New', value: 5234, color: '#00FF95' },
+          { name: 'Regular', value: 12680, color: '#6366f1' },
+          { name: 'Power', value: 6242, color: '#ec4899' }
+        ],
+        description: "Breakdown of contributor types: New (< 1 month), Regular (1-6 months), Power Users (6+ months)"
+      },
+      trend: {
+        value: 12.3,
+        timeframe: "vs last month"
+      },
+      icon: <Users className="h-5 w-5" />,
+      color: "text-blue-400"
+    },
+    {
+      title: "$DeTA Distributed",
+      value: "1.25M",
+      description: "Total $DeTA tokens awarded to contributors",
+      chartData: {
+        type: 'line',
+        values: [
+          { name: 'Beta V1', value: 5, description: "Initial testing phase with core contributors" },
+          { name: 'Beta V2', value: 10, description: "Extended testing with early adopters" },
+          { name: 'Public 1.0', value: 15, description: "First public release with basic Q&A validation" },
+          { name: 'Public 2.0', value: 25, description: "Enhanced validation and quality metrics" },
+          { name: 'Public 3.0', value: 35, description: "Introduction of specialized categories" },
+          { name: 'Public 4.0', value: 45, description: "Advanced quality scoring system" },
+          { name: 'Public 5.0', value: 60, description: "Automated validation improvements" },
+          { name: 'Public 6.0', value: 80, description: "Enhanced reward mechanisms" },
+          { name: 'Public 7.0', value: 100, description: "Full-scale deployment with all features" },
+          { name: 'Public 8.0', value: 125, description: "Current version with optimized distribution" }
+        ],
+        description: "Cumulative $DeTA distribution across network versions (in thousands)",
+        additionalInfo: [
+          {
+            title: "Direct Rewards",
+            content: "80% of tokens distributed as direct rewards for quality Q&A submissions"
+          },
+          {
+            title: "Quality Bonuses",
+            content: "20% allocated for consistency and exceptional quality contributions"
+          }
+        ]
+      },
+      trend: {
+        value: 8.7,
+        timeframe: "vs last version"
+      },
+      icon: <Award className="h-5 w-5" />,
+      color: "text-[#00FF95]"
+    }
+  ]
+
+  const networkStats = [
+    {
+      title: "Average Response Time",
+      value: "1.2s",
+      description: "Time taken to validate and process submissions",
+      info: "Response time affects user experience and network efficiency. Lower is better.",
+      chartData: {
+        type: 'bar',
+        values: [
+          { name: 'Validation', value: 0.3 },
+          { name: 'Processing', value: 0.5 },
+          { name: 'Response', value: 0.4 }
+        ],
+        description: "Breakdown of processing stages in seconds"
+      }
+    },
+    {
+      title: "Network Approval Rate",
+      value: "92.5%",
+      description: "Percentage of submissions meeting quality standards",
+      info: "High approval rates indicate quality data and efficient training.",
+      chartData: {
+        type: 'pie',
+        values: [
+          { name: 'Approved', value: 92.5 },
+          { name: 'Pending', value: 5.5 },
+          { name: 'Rejected', value: 2 }
+        ],
+        description: "Distribution of submission statuses"
+      }
+    },
+    {
+      title: "Training Progress",
+      value: "76%",
+      description: "Progress towards next model iteration",
+      info: "Shows how close we are to the next model update based on training data.",
+      chartData: {
+        type: 'line',
+        values: [
+          { name: 'Week 1', value: 15 },
+          { name: 'Week 2', value: 35 },
+          { name: 'Week 3', value: 52 },
+          { name: 'Week 4', value: 76 }
+        ],
+        description: "Weekly progress towards the next model iteration. Target: 100,000 validated pairs"
+      }
+    }
+  ]
 
   return (
-    <div className="space-y-8">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card p-4 hover:border-success/20 transition-all duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm text-gray-400">Active Users</h3>
-            <Users className="h-4 w-4 text-success" />
-          </div>
-          <p className="text-2xl font-medium glow-text">24,156</p>
-          <p className="text-xs text-success mt-2 flex items-center gap-1">
-            <TrendingUp className="h-3 w-3" />
-            <span className="text-gradient">+12.5% from last week</span>
-          </p>
-        </div>
-
-        <div className="glass-card p-4 hover:border-success/20 transition-all duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm text-gray-400">Total Submissions</h3>
-            <Box className="h-4 w-4 text-success" />
-          </div>
-          <p className="text-2xl font-medium glow-text">156,842</p>
-          <p className="text-xs text-success mt-2 flex items-center gap-1">
-            <TrendingUp className="h-3 w-3" />
-            <span className="text-gradient">+8.2% from last month</span>
-          </p>
-        </div>
-
-        <div className="glass-card p-4 hover:border-success/20 transition-all duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm text-gray-400">Total Value Locked</h3>
-            <Award className="h-4 w-4 text-success" />
-          </div>
-          <p className="text-2xl font-medium glow-text">
-            <span className="text-gradient">1.25M</span> $DeTA
-          </p>
-          <p className="text-xs text-success mt-2 flex items-center gap-1">
-            <TrendingUp className="h-3 w-3" />
-            <span className="text-gradient">+15.3% this week</span>
-          </p>
-        </div>
-
-        <div className="glass-card p-4 hover:border-success/20 transition-all duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm text-gray-400">Global Approval Rate</h3>
-            <Zap className="h-4 w-4 text-success animate-pulse" />
-          </div>
-          <p className="text-2xl font-medium glow-text">
-            <span className="text-gradient">92.5%</span>
-          </p>
-          <p className="text-xs text-success mt-2 flex items-center gap-1">
-            <TrendingUp className="h-3 w-3" />
-            <span className="text-gradient">+2.1% improvement</span>
-          </p>
+    <div className="space-y-6">
+      {/* Overview Section */}
+      <div className="glass-card p-6">
+        <h2 className="text-xl font-medium text-gradient mb-6">Network Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {metrics.map((metric) => (
+            <div key={metric.title} className="rounded-lg bg-black/20 p-4 border border-white/5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className={`${metric.color}`}>{metric.icon}</span>
+                    <h3 className="text-sm font-medium text-gray-400">{metric.title}</h3>
+                    <button 
+                      onClick={() => setActiveInfoModal(metric.title)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="text-2xl font-bold mt-2">{metric.value}</p>
+                </div>
+                {metric.trend && (
+                  <div className="flex items-center gap-1 text-success text-sm">
+                    <TrendingUp className="h-4 w-4" />
+                    <span>+{metric.trend.value}%</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-400 mt-2">{metric.description}</p>
+              {metric.trend && (
+                <p className="text-xs text-gray-500 mt-1">{metric.trend.timeframe}</p>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Detailed Stats Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Platform Activity */}
-        <div className="glass-card p-6 hover:border-success/10 transition-all duration-300">
-          <h2 className="text-lg font-medium mb-6 text-gradient glow-text">Platform Activity</h2>
-          <div className="space-y-6">
-            {/* Time-based Stats */}
-            <div className="space-y-4">
-              <div className="rounded-lg bg-black/20 p-4 border border-white/5 hover:border-success/20 transition-all duration-300 backdrop-blur-sm">
-                <h3 className="text-sm font-medium text-gray-300 mb-4">Last 24 Hours</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-2xl font-bold text-white glow-text">5,842</p>
-                    <p className="text-sm text-gray-400">Submissions</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gradient glow-text">12,450</p>
-                    <p className="text-sm text-gray-400">$DeTA Distributed</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-black/20 p-4 border border-white/5 hover:border-success/20 transition-all duration-300 backdrop-blur-sm">
-                <h3 className="text-sm font-medium text-gray-300 mb-4">Last 7 Days</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-2xl font-bold text-white glow-text">42,156</p>
-                    <p className="text-sm text-gray-400">Submissions</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gradient glow-text">89,750</p>
-                    <p className="text-sm text-gray-400">$DeTA Distributed</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Platform Health */}
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="w-full rounded-lg bg-black/20 p-4 border border-white/5 hover:border-success/20 transition-all duration-300 backdrop-blur-sm"
-            >
+      {/* Network Health Section */}
+      <div className="glass-card p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-medium text-gradient">Network Health</h2>
+          <button
+            onClick={() => setActiveInfoModal("network-health")}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <Info className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {networkStats.map((stat) => (
+            <div key={stat.title} className="rounded-lg bg-black/20 p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-300 flex items-center gap-2 text-left">
-                    Platform Health
-                    <Info className="h-4 w-4 text-success" />
-                  </h3>
-                  <p className="text-2xl font-bold text-gradient glow-text mt-2">92.5%</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-400">Approval Rate</p>
-                  <p className="text-lg font-semibold text-white">Global Average</p>
-                </div>
+                <h3 className="text-sm font-medium text-gray-400">{stat.title}</h3>
+                <button
+                  onClick={() => setActiveInfoModal(stat.title)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </button>
               </div>
+              <p className="text-2xl font-bold mt-2">{stat.value}</p>
+              <p className="text-sm text-gray-400 mt-2">{stat.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Training Progress Chart */}
+      <div className="glass-card p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-medium text-gradient">Training Progress</h2>
+          <div className="flex items-center gap-4">
+            <select 
+              className="bg-black/20 border border-white/10 rounded-md px-3 py-1 text-sm text-gray-400"
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+            </select>
+            <button
+              onClick={() => setActiveInfoModal("training-progress")}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <Info className="h-5 w-5" />
             </button>
           </div>
         </div>
-
-        {/* Platform Stats */}
-        <div className="glass-card p-6 hover:border-success/10 transition-all duration-300">
-          <h2 className="text-lg font-medium mb-6 text-gradient glow-text">Platform Stats</h2>
-          <div className="space-y-6">
-            {/* Rewards Distribution */}
-            <div className="rounded-lg bg-black/20 p-4 border border-white/5 hover:border-success/20 transition-all duration-300 backdrop-blur-sm">
-              <h3 className="text-sm font-medium text-gray-300 mb-4">Rewards Distribution</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Total Distributed</span>
-                  <span className="text-gradient font-semibold glow-text">1.25M $DeTA</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Pending Distribution</span>
-                  <span className="text-white">45.2K $DeTA</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Average per Submission</span>
-                  <span className="text-white">2.1 $DeTA</span>
-                </div>
-              </div>
-            </div>
-
-            {/* All-Time Stats */}
-            <div className="rounded-lg bg-black/20 p-4 border border-white/5 hover:border-success/20 transition-all duration-300 backdrop-blur-sm">
-              <h3 className="text-sm font-medium text-gray-300 mb-4">All-Time Statistics</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-2xl font-bold text-white glow-text">45,862</p>
-                  <p className="text-sm text-gray-400">Total Users</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gradient glow-text">156,842</p>
-                  <p className="text-sm text-gray-400">Total Submissions</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white glow-text">92.5%</p>
-                  <p className="text-sm text-gray-400">Global Approval Rate</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gradient glow-text">24,156</p>
-                  <p className="text-sm text-gray-400">Active Contributors</p>
-                </div>
-              </div>
-            </div>
-          </div>
+        
+        <div className="h-[300px] rounded-lg bg-black/20 p-4 flex items-center justify-center">
+          <p className="text-gray-400">Training Progress Chart Coming Soon</p>
         </div>
       </div>
 
-      <ApprovalRateModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      {/* Info Modal */}
+      <AnimatePresence>
+        {activeInfoModal && (
+          <InfoModal
+            title={activeInfoModal}
+            content={
+              activeInfoModal === "network-health"
+                ? "Network health metrics help monitor the overall performance and efficiency of the DeTA network."
+                : networkStats.find(s => s.title === activeInfoModal)?.info ||
+                  metrics.find(m => m.title === activeInfoModal)?.description ||
+                  "Information about this metric coming soon."
+            }
+            data={
+              networkStats.find(s => s.title === activeInfoModal)?.chartData ||
+              metrics.find(m => m.title === activeInfoModal)?.chartData
+            }
+            onClose={() => setActiveInfoModal(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

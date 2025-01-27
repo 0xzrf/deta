@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CheckCircle, Clock, ArrowRight, ArrowUpRight } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 interface Submission {
   id: string
@@ -82,7 +83,7 @@ export default function Home() {
         {/* Get Started Button */}
         <div className="flex items-center justify-center gap-4">
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/get-started')}
             className="mt-6 mb-12 rounded-full px-8 py-3 text-base font-medium
               button-gradient-border group text-[#00FF95]
               transition-all duration-300 flex items-center gap-2"
@@ -111,19 +112,34 @@ export default function Home() {
             <div className="px-6 text-center">
               <p className="text-2xl font-bold">156,842</p>
               <h3 className="text-xs text-gray-400">Total Submissions</h3>
-              <a href="#" className="text-xs text-[#00FF95]/80 hover:text-[#00FF95] transition-colors">Know More ↗</a>
+              <Link 
+                href="/analytics?tab=analytics"
+                className="text-xs text-[#00FF95]/80 hover:text-[#00FF95] transition-colors"
+              >
+                Know More ↗
+              </Link>
             </div>
             
             <div className="px-6 text-center">
               <p className="text-2xl font-bold text">24,156</p>
               <h3 className="text-xs text-gray-400">Active Users</h3>
-              <a href="#" className="text-xs text-[#00FF95]/80 hover:text-[#00FF95] transition-colors">Know More ↗</a>
+              <Link 
+                href="/analytics?tab=analytics"
+                className="text-xs text-[#00FF95]/80 hover:text-[#00FF95] transition-colors"
+              >
+                Know More ↗
+              </Link>
             </div>
             
             <div className="px-6 text-center">
               <p className="text-2xl font-bold text-[#00FF95]">1.25M</p>
               <h3 className="text-xs text-gray-400">$DeTA Distributed</h3>
-              <a href="#" className="text-xs text-[#00FF95]/80 hover:text-[#00FF95] transition-colors">Know More ↗</a>
+              <Link 
+                href="/analytics?tab=analytics"
+                className="text-xs text-[#00FF95]/80 hover:text-[#00FF95] transition-colors"
+              >
+                Know More ↗
+              </Link>
             </div>
           </div>
         </div>

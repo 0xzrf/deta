@@ -7,6 +7,8 @@ import {
 } from "lucide-react"
 import { ApprovalRateModal } from "./approval-rate-modal"
 import { useWallet } from "@/contexts/wallet-context"
+import { useTrainingStats } from "@/contexts/training-stats-context"
+import { AnimatePresence, motion } from "framer-motion"
 
 interface QAPair {
   id: number
@@ -33,7 +35,8 @@ interface ProcessingStep {
 }
 
 export function TrainingForm() {
-  const { isConnected, connectWallet } = useWallet()
+  const { isConnected, connectWallet, wallet } = useWallet()
+  const { updateStats } = useTrainingStats()
   const [qaPairs, setQaPairs] = useState<QAPair[]>([{ 
     id: 1, 
     question: "", 
@@ -78,6 +81,7 @@ export function TrainingForm() {
       status: 'pending'
     }
   ])
+  const [showUnlockInfo, setShowUnlockInfo] = useState(false)
 
   // Calculate reward based on content length, complexity, and random bonus
   const calculateReward = (question: string, answer: string): number => {
@@ -111,7 +115,28 @@ export function TrainingForm() {
     )
   }, [qaPairs.map(p => p.question + p.answer).join('')])
 
-  const totalEstimatedReward = qaPairs.reduce((sum, pair) => sum + (pair.estimatedReward || 0), 0)
+  const totalEstimatedReward = qaPairs.reduce((sum, pair) => 
+    sum + (pair.estimatedReward || 0), 0
+  )
+
+  // Calculate approval rate based on validated pairs
+  const calculateApprovalRate = () => {
+    const validatedPairs = qaPairs.filter(p => p.validationStatus)
+    if (validatedPairs.length === 0) return 0
+    
+    const approvedPairs = validatedPairs.filter(p => p.validationStatus === 'accepted')
+    return Math.round((approvedPairs.length / validatedPairs.length) * 100)
+  }
+
+  // Calculate reward multiplier based on approval rate
+  const calculateMultiplier = () => {
+    const rate = calculateApprovalRate()
+    if (rate >= 95) return 2.0
+    if (rate >= 90) return 1.75
+    if (rate >= 85) return 1.5
+    if (rate >= 80) return 1.25
+    return 1.0
+  }
 
   const handleAddPair = () => {
     const lastPair = qaPairs[qaPairs.length - 1]
@@ -342,137 +367,57 @@ export function TrainingForm() {
     setIsProcessing(false)
   }
 
+  useEffect(() => {
+    // Update stats whenever relevant values change
+    updateStats({
+      submittedPairs: qaPairs.length,
+      sessionEstimate: totalEstimatedReward,
+      approvalRate: calculateApprovalRate(),
+      approvalMultiplier: calculateMultiplier()
+    })
+  }, [qaPairs, totalEstimatedReward])
+
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8 xl:grid-cols-2">
-        <div className="rounded-lg border border-white/10 bg-black/20 p-4 sm:p-6 backdrop-blur-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Main Training Form - Takes up 3 columns */}
+        <div className="lg:col-span-3 glass-card p-6">
+          <h2 className="text-xl font-medium text-[#00FF95] mb-6">Submit Training Data</h2>
           {isProcessing ? (
-            <div>
-              <h2 className="text-xl font-semibold text-gradient mb-8">Processing Submissions</h2>
-              <div className="space-y-6">
-                {processingSteps.map((step) => (
-                  <div key={step.id} className="flex items-center gap-4">
-                    <div className="flex-shrink-0">
-                      {step.status === 'completed' ? (
-                        <CheckCircle className="h-6 w-6 text-green-400" />
-                      ) : step.status === 'processing' ? (
-                        <Loader2 className="h-6 w-6 text-[--success] animate-spin" />
-                      ) : (
-                        <div className="h-6 w-6 text-gray-400">
-                          {step.icon}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-white">{step.title}</p>
-                      <p className="text-sm text-gray-400">{step.description}</p>
-                    </div>
-                    {step.status === 'completed' && (
-                      <span className="text-sm text-green-400">Complete</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 text-center text-sm text-gray-400">
-                {currentStep < 3 ? (
-                  "Please wait while we process your submissions..."
-                ) : (
-                  "Processing complete! Displaying results..."
-                )}
-              </div>
-            </div>
-          ) : submissionResults ? (
-            <div>
-              <h2 className="text-xl font-semibold text-gradient mb-6">Submission Results</h2>
-              <div className="space-y-4">
-                <div className="rounded-md bg-black/20 p-4">
-                  <p className="text-2xl font-bold text-gradient">
-                    {submissionResults.acceptedPairs}
-                  </p>
-                  <p className="text-sm text-gray-400">Accepted Pairs</p>
-                </div>
-                <div className="rounded-md bg-black/20 p-4">
-                  <p className="text-2xl font-bold text-gradient">
-                    {submissionResults.totalReward.toFixed(1)} $DeTA
-                  </p>
-                  <p className="text-sm text-gray-400">Total Reward</p>
-                </div>
-                <div className="rounded-md bg-black/20 p-4">
-                  <p className="text-2xl font-bold text-gradient">
-                    {submissionResults.qualityScore}%
-                  </p>
-                  <p className="text-sm text-gray-400">Quality Score</p>
-                </div>
-                <button
-                  onClick={() => setSubmissionResults(null)}
-                  className="mt-6 w-full button-gradient rounded-md px-4 py-3 text-sm font-medium text-white"
-                >
-                  Submit More Q&A Pairs
-                </button>
-              </div>
-            </div>
+            <SubmissionProcessing
+              steps={processingSteps}
+              currentStep={currentStep}
+              results={submissionResults}
+            />
           ) : (
             <>
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gradient">Submit Training Data</h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-400">
-                    Session Reward:
-                  </span>
-                  <span className="text-gradient font-semibold">
-                    {totalEstimatedReward.toFixed(1)} $DeTA
-                  </span>
+              {/* File Upload Section */}
+              <div className="mb-6">
+                <div className="rounded-lg border-2 border-dashed border-white/10 p-6 text-center hover:border-white/20 transition-colors">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept=".json,.csv,.txt"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex flex-col items-center gap-2 w-full"
+                  >
+                    <Upload className="h-8 w-8 text-gray-400" />
+                    <p className="text-sm text-gray-400">
+                      Upload a file or click to browse
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Supports JSON, CSV, TXT
+                    </p>
+                  </button>
                 </div>
               </div>
 
-              <div className="space-y-4 max-h-[800px] overflow-y-auto">
-                {/* File Upload Section */}
-                <div className="rounded-lg border border-dashed border-white/10 bg-black/20 p-4">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      accept=".csv,.json"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) handleFileUpload(file)
-                      }}
-                    />
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-2 text-sm text-gray-300 hover:text-white"
-                    >
-                      <Upload className="h-4 w-4" />
-                      Upload Q&A File
-                    </button>
-                    <p className="text-xs text-gray-400">
-                      Supported formats: CSV, JSON
-                    </p>
-                  </div>
-                  {fileUpload.error && (
-                    <p className="mt-2 text-sm text-red-400">{fileUpload.error}</p>
-                  )}
-                  {fileUpload.file && (
-                    <div className="mt-2 flex items-center justify-between rounded-md bg-black/20 p-2">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-white">{fileUpload.file.name}</span>
-                        <span className="text-xs text-gray-400">
-                          ({fileUpload.preview?.length} pairs)
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => setFileUpload({ file: null, preview: null, error: null })}
-                        className="text-gray-400 hover:text-red-400"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
+              {/* Q&A Input Section */}
+              <div className="space-y-4">
                 {qaPairs.map((pair) => (
                   <div
                     key={pair.id}
@@ -559,137 +504,69 @@ export function TrainingForm() {
                     )}
                   </div>
                 ))}
-              </div>
 
-              <div className="mt-4 flex items-center justify-between">
+                {/* Add Q&A Pair Button */}
                 <button
                   onClick={handleAddPair}
-                  className="flex items-center gap-2 rounded-md border border-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+                  className="w-full rounded-lg border border-dashed border-[#00FF95]/20 
+                    bg-[#00FF95]/5 hover:bg-[#00FF95]/10 p-4 text-[#00FF95]
+                    transition-all duration-300 flex items-center justify-center gap-2
+                    group"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-5 w-5 group-hover:scale-110 transition-transform" />
                   Add Q&A Pair
-                </button>
-
-                <button
-                  onClick={handleSubmit}
-                  className={`rounded-full px-4 py-2 text-sm font-medium
-                    button-gradient-border text-[#00FF95]
-                    transition-all duration-300 flex items-center gap-2`}
-                >
-                  {!isConnected ? (
-                    <>
-                      <Wallet className="h-4 w-4" />
-                      Connect Wallet to Submit
-                    </>
-                  ) : (
-                    'Submit Q&A Pairs'
-                  )}
                 </button>
               </div>
             </>
           )}
         </div>
 
-        {/* Stats Section */}
-        <div className="rounded-lg border border-white/10 bg-black/20 p-4 sm:p-6 backdrop-blur-sm">
-          <h2 className="mb-6 text-xl font-semibold text-gradient">Training Stats</h2>
-          <div className="space-y-6">
-            {/* Current Session Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-md bg-black/20 p-4">
-                <p className="text-2xl font-bold text-white">
-                  {qaPairs.filter(pair => pair.isCollapsed).length}
-                </p>
-                <p className="text-sm text-gray-400">Current Session</p>
-              </div>
-              <div className="rounded-md bg-black/20 p-4">
-                <p className="text-2xl font-bold text-gradient">
-                  {totalEstimatedReward.toFixed(1)} $DeTA
-                </p>
-                <p className="text-sm text-gray-400">Session Estimate</p>
-              </div>
+        {/* Rewards Panel - Takes up 1 column */}
+        <div className="glass-card p-6 space-y-6">
+          <h2 className="text-xl font-medium text-[#00FF95] mb-6">Your Rewards</h2>
+          
+          <div className="space-y-4">
+            {/* Total Earned */}
+            <div className="rounded-lg bg-black/20 p-4">
+              <p className="text-sm text-gray-400">Total $DeTA Earned</p>
+              <p className="text-2xl font-bold text-gradient mt-1">263.4 $DeTA</p>
             </div>
-
-            {/* Add new Approval Rate Rewards section after Current Session Stats */}
-            <div className="rounded-md bg-black/20 p-4">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="w-full flex items-center justify-between group"
-              >
-                <div>
-                  <h3 className="text-sm font-medium text-gray-300 flex items-center gap-2">
-                    Approval Rate Rewards
-                    <Info className="h-4 w-4 text-gray-400 group-hover:text-white" />
-                  </h3>
-                  <p className="text-2xl font-bold text-gradient mt-2">
-                    {approvalMultiplier}x
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-400">Current Rate</p>
-                  <p className="text-lg font-semibold text-white">{approvalRate}%</p>
-                </div>
-              </button>
+            
+            {/* Total Claimed */}
+            <div className="rounded-lg bg-black/20 p-4">
+              <p className="text-sm text-gray-400">Total $DeTA Claimed</p>
+              <p className="text-2xl font-bold text-white mt-1">210.6 $DeTA</p>
             </div>
-
-            {/* Rewards Section */}
-            <div className="rounded-md bg-black/20 p-4">
-              <h3 className="text-sm font-medium text-gray-300 mb-4">Rewards Overview</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Available to Claim</span>
-                  <span className="text-gradient font-semibold">35.2 $DeTA</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Total Claimed</span>
-                  <span className="text-white">210.6 $DeTA</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Pending Approval</span>
-                  <span className="text-white">{totalEstimatedReward.toFixed(1)} $DeTA</span>
-                </div>
-                
-                {!isConnected ? (
-                  <button
-                    onClick={connectWallet}
-                    className="w-full mt-4 rounded-full px-4 py-2 text-sm font-medium
-                      button-gradient-border text-[#00FF95]
-                      transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    <Wallet className="h-4 w-4" />
-                    Connect Wallet to Claim
-                  </button>
-                ) : (
-                  <button
-                    onClick={claimRewards}
-                    className="rounded-full px-4 py-2 text-sm font-medium
-                      button-gradient-border text-[#00FF95]
-                      transition-all duration-300 flex items-center gap-2"
-                  >
-                    Claim Rewards
-                  </button>
-                )}
+            
+            {/* Locked Amount */}
+            <div className="rounded-lg bg-black/20 p-4">
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-400">Unlocks at Next Stage</p>
+                <button
+                  onClick={() => setShowUnlockInfo(true)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <Info className="h-4 w-4" />
+                </button>
               </div>
+              <p className="text-2xl font-bold text-white mt-1">17.6 $DeTA</p>
             </div>
-
-            {/* All-Time Stats */}
-            <div className="rounded-md bg-black/20 p-4">
-              <h3 className="text-sm font-medium text-gray-300 mb-4">All-Time Stats</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Total Submissions</span>
-                  <span className="text-white">156</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Approved Pairs</span>
-                  <span className="text-white">142</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Approval Rate</span>
-                  <span className="text-white">90.5%</span>
-                </div>
-              </div>
+            
+            {/* Available to Claim */}
+            <div className="rounded-lg bg-black/20 p-4">
+              <p className="text-sm text-gray-400">Claimable $DeTA</p>
+              <p className="text-2xl font-bold text-gradient mt-1">35.2 $DeTA</p>
             </div>
+            
+            <button
+              onClick={claimRewards}
+              className="w-full rounded-full px-4 py-3 text-base font-medium
+                button-gradient-border text-[#00FF95]
+                transition-all duration-300 flex items-center justify-center gap-2"
+              disabled={!isConnected}
+            >
+              {isConnected ? 'Claim 35.2 $DeTA' : 'Connect Wallet to Claim'}
+            </button>
           </div>
         </div>
       </div>
@@ -698,6 +575,38 @@ export function TrainingForm() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
+      
+      {/* Unlock Info Modal */}
+      <AnimatePresence>
+        {showUnlockInfo && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-md glass-card p-6"
+            >
+              <button
+                onClick={() => setShowUnlockInfo(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              <h3 className="text-xl font-medium text-[#00FF95] mb-4">$DeTA Unlock Schedule</h3>
+              <p className="text-gray-400 leading-relaxed">
+                50% of your total earned $DeTA tokens are locked until the next phase of 
+                the DeTA training protocol. This ensures long-term commitment and quality 
+                contributions from our community members.
+              </p>
+              <p className="text-gray-400 leading-relaxed mt-4">
+                The locked tokens will automatically become available for claiming when 
+                the next phase begins.
+              </p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
