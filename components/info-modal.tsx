@@ -3,7 +3,7 @@
 import { useRef, useEffect } from "react"
 import { X, TrendingUp, Info } from "lucide-react"
 import { motion } from "framer-motion"
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell, Legend } from "recharts"
+import { LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell, Legend } from "recharts"
 
 interface InfoModalProps {
   title: string

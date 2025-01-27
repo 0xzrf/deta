@@ -1,9 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { Info, TrendingUp, Users, Database, Award, Clock, HelpCircle } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence } from "framer-motion"
 import { InfoModal } from "./info-modal"
+import { SubmissionProcessing } from "./submission-processing"
+import { useWallet } from "react-wallet-adapter"
+
+interface ChartValue {
+  name: string
+  value: number
+  description?: string
+  color?: string
+}
 
 interface MetricCard {
   title: string
@@ -11,7 +20,7 @@ interface MetricCard {
   description: string
   chartData?: {
     type: 'line' | 'bar' | 'pie'
-    values: any[]
+    values: ChartValue[]
     description: string
     additionalInfo?: { title: string; content: string }[]
   }
@@ -25,6 +34,7 @@ interface MetricCard {
 
 export function AnalyticsDashboard() {
   const [activeInfoModal, setActiveInfoModal] = useState<string | null>(null)
+  const { publicKey } = useWallet()
 
   const metrics: MetricCard[] = [
     {
@@ -157,6 +167,38 @@ export function AnalyticsDashboard() {
     }
   ]
 
+  const modalContent = useMemo(() => {
+    if (activeInfoModal === "network-health") {
+      return "Network health metrics help monitor the overall performance and efficiency of the DeTA network."
+    }
+    return networkStats.find(s => s.title === activeInfoModal)?.info ||
+      metrics.find(m => m.title === activeInfoModal)?.description ||
+      "Information about this metric coming soon."
+  }, [activeInfoModal, networkStats, metrics])
+
+  const modalData = useMemo(() => {
+    return networkStats.find(s => s.title === activeInfoModal)?.chartData ||
+      metrics.find(m => m.title === activeInfoModal)?.chartData
+  }, [activeInfoModal, networkStats, metrics])
+
+  useEffect(() => {
+    calculateApprovalRate()
+    calculateMultiplier()
+    updateStats()
+  }, [calculateApprovalRate, calculateMultiplier, updateStats])
+
+  const calculateApprovalRate = useCallback(() => {
+    // ... calculation logic
+  }, [/* relevant dependencies */])
+
+  const calculateMultiplier = useCallback(() => {
+    // ... calculation logic
+  }, [/* relevant dependencies */])
+
+  const updateStats = useCallback(() => {
+    // ... update logic
+  }, [/* relevant dependencies */])
+
   return (
     <div className="space-y-6">
       {/* Overview Section */}
@@ -257,17 +299,8 @@ export function AnalyticsDashboard() {
         {activeInfoModal && (
           <InfoModal
             title={activeInfoModal}
-            content={
-              activeInfoModal === "network-health"
-                ? "Network health metrics help monitor the overall performance and efficiency of the DeTA network."
-                : networkStats.find(s => s.title === activeInfoModal)?.info ||
-                  metrics.find(m => m.title === activeInfoModal)?.description ||
-                  "Information about this metric coming soon."
-            }
-            data={
-              networkStats.find(s => s.title === activeInfoModal)?.chartData ||
-              metrics.find(m => m.title === activeInfoModal)?.chartData
-            }
+            content={modalContent}
+            data={modalData}
             onClose={() => setActiveInfoModal(null)}
           />
         )}

@@ -115,4 +115,16 @@ export function SubmissionProcessing({ totalPairs }: SubmissionProcessingProps) 
       </div>
     </div>
   )
+}
+
+export function SubmissionProcessing() {
+  return (
+    <div className="rounded-lg bg-black/20 p-4">
+      <h3 className="text-sm font-medium text-gray-400">Processing Status</h3>
+      <div className="flex items-center gap-2 mt-2">
+        <div className="animate-pulse h-2 w-2 rounded-full bg-[#00FF95]" />
+        <p className="text-sm text-gray-400">Processing submissions...</p>
+      </div>
+    </div>
+  )
 } 

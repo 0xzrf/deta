@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { TrainingForm } from "@/components/training-form"
-import { AnalyticsDashboard } from "@/components/analytics-dashboard"
-import { ModelProgress } from "@/components/model-progress"
-import { MessageSquareText, TrendingUp, HelpCircle, BarChart3, Activity, ChevronDown, CheckCircle, Clock } from "lucide-react"
+import { MessageSquareText, TrendingUp, HelpCircle, ChevronDown, CheckCircle, Clock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useTrainingStats } from "@/contexts/training-stats-context"
 import { useWallet } from "@/contexts/wallet-context"
