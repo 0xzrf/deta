@@ -3,19 +3,14 @@
 import { useRef, useEffect } from "react"
 import { X, TrendingUp, Info } from "lucide-react"
 import { motion } from "framer-motion"
-import { LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell, Legend } from "recharts"
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell, Legend } from "recharts"
 
 interface InfoModalProps {
   title: string
   content: string
   data?: {
     type: 'line' | 'bar' | 'pie'
-    values: {
-      name: string
-      value: number
-      description?: string
-      color?: string
-    }[]
+    values: any[]
     description: string
     trend?: {
       value: number
@@ -30,6 +25,12 @@ interface InfoModalProps {
 }
 
 const COLORS = ['#00FF95', '#6366f1', '#ec4899', '#f59e0b']
+const HOVER_COLORS = {
+  '#00FF95': '#00cc78', // Darker green on hover
+  '#6366f1': '#4f46e5', // Darker indigo on hover
+  '#ec4899': '#db2777', // Darker pink on hover
+  '#f59e0b': '#d97706'  // Darker amber on hover
+}
 
 export function InfoModal({ title, content, data, onClose }: InfoModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
@@ -130,15 +131,29 @@ export function InfoModal({ title, content, data, onClose }: InfoModalProps) {
                     cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                   />
                   <Legend 
-                    formatter={(legendValue) => (
+                    formatter={(value, entry) => (
                       <span className="text-gray-400 hover:text-white transition-colors">
-                        {legendValue}
+                        {value}
                       </span>
                     )}
                   />
                   <Bar 
                     dataKey="value" 
                     radius={[4, 4, 0, 0]}
+                    onMouseEnter={(data, index) => {
+                      const cell = document.querySelector(`[name="Cell-${index}"]`)
+                      if (cell) {
+                        const color = data.color || COLORS[index % COLORS.length]
+                        cell.setAttribute('fill', HOVER_COLORS[color] || color)
+                      }
+                    }}
+                    onMouseLeave={(data, index) => {
+                      const cell = document.querySelector(`[name="Cell-${index}"]`)
+                      if (cell) {
+                        const color = data.color || COLORS[index % COLORS.length]
+                        cell.setAttribute('fill', color)
+                      }
+                    }}
                   >
                     {data.values.map((entry, index) => (
                       <Cell 
@@ -219,7 +234,7 @@ export function InfoModal({ title, content, data, onClose }: InfoModalProps) {
                     activeDot={{ r: 6, fill: '#00FF95' }}
                   />
                   <Legend 
-                    formatter={() => (
+                    formatter={(value) => (
                       <span className="text-gray-400 hover:text-white transition-colors">
                         Distribution Percentage
                       </span>

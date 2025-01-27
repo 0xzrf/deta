@@ -1,16 +1,9 @@
 "use client"
 
-import { useState, useMemo, useCallback, useEffect } from "react"
-import { Info, TrendingUp, Users, Database, Award, HelpCircle } from "lucide-react"
-import { AnimatePresence } from "framer-motion"
+import { useState } from "react"
+import { Info, TrendingUp, Users, Database, Award, Clock, HelpCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { InfoModal } from "./info-modal"
-
-interface ChartValue {
-  name: string
-  value: number
-  description?: string
-  color?: string
-}
 
 interface MetricCard {
   title: string
@@ -18,7 +11,7 @@ interface MetricCard {
   description: string
   chartData?: {
     type: 'line' | 'bar' | 'pie'
-    values: ChartValue[]
+    values: any[]
     description: string
     additionalInfo?: { title: string; content: string }[]
   }
@@ -33,7 +26,7 @@ interface MetricCard {
 export function AnalyticsDashboard() {
   const [activeInfoModal, setActiveInfoModal] = useState<string | null>(null)
 
-  const metrics = useMemo<MetricCard[]>(() => [
+  const metrics: MetricCard[] = [
     {
       title: "Total Data Points",
       value: "156,842",
@@ -113,9 +106,9 @@ export function AnalyticsDashboard() {
       icon: <Award className="h-5 w-5" />,
       color: "text-[#00FF95]"
     }
-  ], [])
+  ]
 
-  const networkStats = useMemo(() => [
+  const networkStats = [
     {
       title: "Average Response Time",
       value: "1.2s",
@@ -162,49 +155,7 @@ export function AnalyticsDashboard() {
         description: "Weekly progress towards the next model iteration. Target: 100,000 validated pairs"
       }
     }
-  ], [])
-
-  const modalContent = useMemo(() => {
-    if (activeInfoModal === "network-health") {
-      return "Network health metrics help monitor the overall performance and efficiency of the DeTA network."
-    }
-    return networkStats.find(s => s.title === activeInfoModal)?.info ||
-      metrics.find(m => m.title === activeInfoModal)?.description ||
-      "Information about this metric coming soon."
-  }, [activeInfoModal, networkStats, metrics])
-
-  const modalData = useMemo(() => {
-    return networkStats.find(s => s.title === activeInfoModal)?.chartData ||
-      metrics.find(m => m.title === activeInfoModal)?.chartData
-  }, [activeInfoModal, networkStats, metrics])
-
-  useEffect(() => {
-    const currentChart = chartRef.current
-    
-    // Chart initialization
-    if (currentChart) {
-      // Initialize chart
-    }
-
-    return () => {
-      if (currentChart) {
-        // Cleanup
-      }
-    }
-  }, [])
-
-  // Remove unused functions if they are not needed
-  // const calculateApprovalRate = useCallback(() => {
-  //   // ... calculation logic
-  // }, [/* relevant dependencies */])
-
-  // const calculateMultiplier = useCallback(() => {
-  //   // ... calculation logic
-  // }, [/* relevant dependencies */])
-
-  // const updateStats = useCallback(() => {
-  //   // ... update logic
-  // }, [/* relevant dependencies */])
+  ]
 
   return (
     <div className="space-y-6">
@@ -306,8 +257,17 @@ export function AnalyticsDashboard() {
         {activeInfoModal && (
           <InfoModal
             title={activeInfoModal}
-            content={modalContent}
-            data={modalData}
+            content={
+              activeInfoModal === "network-health"
+                ? "Network health metrics help monitor the overall performance and efficiency of the DeTA network."
+                : networkStats.find(s => s.title === activeInfoModal)?.info ||
+                  metrics.find(m => m.title === activeInfoModal)?.description ||
+                  "Information about this metric coming soon."
+            }
+            data={
+              networkStats.find(s => s.title === activeInfoModal)?.chartData ||
+              metrics.find(m => m.title === activeInfoModal)?.chartData
+            }
             onClose={() => setActiveInfoModal(null)}
           />
         )}

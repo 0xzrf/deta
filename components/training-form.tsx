@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef } from "react"
 import { 
-  ChevronDown, Plus, X, Info, Upload,
+  ChevronDown, Plus, X, Wallet, Info, Upload, FileText,
   Clock, Loader2, CheckCircle, XCircle, Brain, Filter, Award
 } from "lucide-react"
 import { ApprovalRateModal } from "./approval-rate-modal"
-import { SubmissionProcessingDetailed } from "./submission-processing"
 import { useWallet } from "@/contexts/wallet-context"
 import { useTrainingStats } from "@/contexts/training-stats-context"
 import { AnimatePresence, motion } from "framer-motion"
@@ -36,14 +35,14 @@ interface ProcessingStep {
 }
 
 export function TrainingForm() {
-  const { isConnected, connectWallet } = useWallet()
+  const { isConnected, connectWallet, wallet } = useWallet()
   const { updateStats } = useTrainingStats()
   const [qaPairs, setQaPairs] = useState<QAPair[]>([{ 
     id: 1, 
     question: "", 
     answer: "", 
     isCollapsed: false,
-    estimatedReward: undefined
+    estimatedReward: 0
   }])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [fileUpload, setFileUpload] = useState<FileUploadState>({
@@ -106,29 +105,38 @@ export function TrainingForm() {
     return Number(reward.toFixed(2))
   }
 
+  // Update rewards whenever Q&A content changes
+  useEffect(() => {
+    setQaPairs(pairs => 
+      pairs.map(pair => ({
+        ...pair,
+        estimatedReward: calculateReward(pair.question, pair.answer)
+      }))
+    )
+  }, [qaPairs.map(p => p.question + p.answer).join('')])
+
+  const totalEstimatedReward = qaPairs.reduce((sum, pair) => 
+    sum + (pair.estimatedReward || 0), 0
+  )
+
   // Calculate approval rate based on validated pairs
-  const calculateApprovalRate = useCallback(() => {
+  const calculateApprovalRate = () => {
     const validatedPairs = qaPairs.filter(p => p.validationStatus)
     if (validatedPairs.length === 0) return 0
     
     const approvedPairs = validatedPairs.filter(p => p.validationStatus === 'accepted')
     return Math.round((approvedPairs.length / validatedPairs.length) * 100)
-  }, [qaPairs])
+  }
 
   // Calculate reward multiplier based on approval rate
-  const calculateMultiplier = useCallback(() => {
+  const calculateMultiplier = () => {
     const rate = calculateApprovalRate()
     if (rate >= 95) return 2.0
     if (rate >= 90) return 1.75
     if (rate >= 85) return 1.5
     if (rate >= 80) return 1.25
     return 1.0
-  }, [calculateApprovalRate])
-
-  // Apply multiplier to rewards
-  const calculateFinalReward = useCallback((baseReward: number) => {
-    return baseReward * calculateMultiplier()
-  }, [calculateMultiplier])
+  }
 
   const handleAddPair = () => {
     const lastPair = qaPairs[qaPairs.length - 1]
@@ -170,19 +178,9 @@ export function TrainingForm() {
   }
 
   const handleChange = (id: number, field: 'question' | 'answer', value: string) => {
-    setQaPairs(qaPairs.map(pair => {
-      if (pair.id === id) {
-        const updatedPair = { ...pair, [field]: value }
-        // Calculate estimated reward when content changes
-        const baseReward = calculateReward(
-          field === 'question' ? value : updatedPair.question,
-          field === 'answer' ? value : updatedPair.answer
-        )
-        updatedPair.estimatedReward = calculateFinalReward(baseReward)
-        return updatedPair
-      }
-      return pair
-    }))
+    setQaPairs(qaPairs.map(pair =>
+      pair.id === id ? { ...pair, [field]: value } : pair
+    ))
   }
 
   const removePair = (id: number) => {
@@ -206,8 +204,7 @@ export function TrainingForm() {
   }
 
   const approvalRate = 90.5 // This should come from your data
-  // Remove or use approvalMultiplier
-  // const approvalMultiplier = getApprovalRateMultiplier(approvalRate)
+  const approvalMultiplier = getApprovalRateMultiplier(approvalRate)
 
   const handleFileUpload = async (file: File) => {
     try {
@@ -338,6 +335,7 @@ export function TrainingForm() {
       // Simulate AI validation
       await new Promise(resolve => setTimeout(resolve, 1500))
 
+      // Simulate validation result
       const isAccepted = Math.random() > 0.2 // 80% acceptance rate
       const validationMessage = isAccepted 
         ? 'Meets quality standards'
@@ -373,11 +371,11 @@ export function TrainingForm() {
     // Update stats whenever relevant values change
     updateStats({
       submittedPairs: qaPairs.length,
-      sessionEstimate: qaPairs.reduce((sum, p) => sum + (p.estimatedReward || 0), 0),
+      sessionEstimate: totalEstimatedReward,
       approvalRate: calculateApprovalRate(),
-      multiplier: calculateMultiplier()
+      approvalMultiplier: calculateMultiplier()
     })
-  }, [qaPairs, calculateApprovalRate, calculateMultiplier, updateStats])
+  }, [qaPairs, totalEstimatedReward])
 
   return (
     <>
@@ -386,7 +384,7 @@ export function TrainingForm() {
         <div className="lg:col-span-3 glass-card p-6">
           <h2 className="text-xl font-medium text-[#00FF95] mb-6">Submit Training Data</h2>
           {isProcessing ? (
-            <SubmissionProcessingDetailed
+            <SubmissionProcessing
               steps={processingSteps}
               currentStep={currentStep}
               results={submissionResults}
@@ -427,19 +425,44 @@ export function TrainingForm() {
                   >
                     {pair.isCollapsed ? (
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-400">{pair.question}</p>
-                          <p className="text-sm text-gray-400">{pair.answer}</p>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white truncate">
+                            Q: {pair.question}
+                          </p>
+                          <p className="text-sm text-gray-400 truncate">
+                            A: {pair.answer}
+                          </p>
+                          {pair.validationStatus && (
+                            <div className="mt-2">
+                              <ValidationStatus 
+                                status={pair.validationStatus}
+                                message={pair.validationMessage}
+                              />
+                            </div>
+                          )}
                         </div>
-                        <button
-                          onClick={() => toggleCollapse(pair.id)}
-                          className="rounded-md px-3 py-1 text-sm text-gray-400 hover:text-white"
-                        >
-                          Expand
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gradient">
+                            {pair.estimatedReward?.toFixed(1)} $DeTA
+                          </span>
+                          <button
+                            onClick={() => toggleCollapse(pair.id)}
+                            className="p-1 text-gray-400 hover:text-white"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </button>
+                          {!isProcessing && (
+                            <button
+                              onClick={() => removePair(pair.id)}
+                              className="p-1 text-gray-400 hover:text-red-500"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <div>
                           <label className="mb-2 block text-sm font-medium text-gray-300">
                             Question
@@ -494,17 +517,6 @@ export function TrainingForm() {
                   Add Q&A Pair
                 </button>
               </div>
-
-              {/* Submit Button */}
-              <button
-                onClick={handleSubmit}
-                className="mt-6 w-full rounded-full px-4 py-3 text-base font-medium
-                  button-gradient-border text-[#00FF95]
-                  transition-all duration-300 flex items-center justify-center gap-2"
-                disabled={!isConnected}
-              >
-                {isConnected ? 'Submit Training Data' : 'Connect Wallet to Submit'}
-              </button>
             </>
           )}
         </div>
