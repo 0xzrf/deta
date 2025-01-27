@@ -15,7 +15,7 @@ interface SubmissionProcessingProps {
   totalPairs: number
 }
 
-export function SubmissionProcessing({ totalPairs }: SubmissionProcessingProps) {
+export function SubmissionProcessingDetailed({ totalPairs }: SubmissionProcessingProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([
     {

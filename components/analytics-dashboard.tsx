@@ -5,7 +5,7 @@ import { Info, TrendingUp, Users, Database, Award, Clock, HelpCircle } from "luc
 import { AnimatePresence } from "framer-motion"
 import { InfoModal } from "./info-modal"
 import { SubmissionProcessing } from "./submission-processing"
-import { useWallet } from "react-wallet-adapter"
+import { useWallet } from "@solana/wallet-adapter-react"
 
 interface ChartValue {
   name: string
