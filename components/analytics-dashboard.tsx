@@ -1,20 +1,27 @@
 "use client"
 
 import { useState } from "react"
-import { Info, TrendingUp, Users, Database, Award, Clock, HelpCircle } from "lucide-react"
+import { Info, TrendingUp, Users, Database, Award, HelpCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { InfoModal } from "./info-modal"
+
+interface ChartData {
+  type: 'line' | 'bar' | 'pie'
+  values: Array<{
+    name: string
+    value: number
+    description?: string
+    color?: string
+  }>
+  description: string
+  additionalInfo?: { title: string; content: string }[]
+}
 
 interface MetricCard {
   title: string
   value: string | number
   description: string
-  chartData?: {
-    type: 'line' | 'bar' | 'pie'
-    values: any[]
-    description: string
-    additionalInfo?: { title: string; content: string }[]
-  }
+  chartData?: ChartData
   trend?: {
     value: number
     timeframe: string
@@ -203,7 +210,7 @@ export function AnalyticsDashboard() {
             onClick={() => setActiveInfoModal("network-health")}
             className="text-gray-400 hover:text-white transition-colors"
           >
-            <Info className="h-5 w-5" />
+            <HelpCircle className="h-5 w-5" />
           </button>
         </div>
         
@@ -242,7 +249,7 @@ export function AnalyticsDashboard() {
               onClick={() => setActiveInfoModal("training-progress")}
               className="text-gray-400 hover:text-white transition-colors"
             >
-              <Info className="h-5 w-5" />
+              <HelpCircle className="h-5 w-5" />
             </button>
           </div>
         </div>

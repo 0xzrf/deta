@@ -36,14 +36,6 @@ interface ProcessingStep {
   status: 'pending' | 'processing' | 'completed'
 }
 
-interface TrainingStats {
-  submittedPairs: number
-  sessionEstimate: number
-  approvalRate: number
-  approvalMultiplier: number
-  approvedPairs?: number
-}
-
 export function TrainingForm() {
   const { isConnected, connectWallet } = useWallet()
   const { updateStats } = useTrainingStats()
@@ -92,9 +84,9 @@ export function TrainingForm() {
     }
   ])
   const [showUnlockInfo, setShowUnlockInfo] = useState(false)
-  const [isHowToOpen, setIsHowToOpen] = useState(false)
   const [showLatestSessions, setShowLatestSessions] = useState(false)
   const [showExampleModal, setShowExampleModal] = useState<'question' | 'answer' | null>(null)
+  const [totalEstimatedReward, setTotalEstimatedReward] = useState(0)
 
   // Calculate reward based on content length, complexity, and random bonus
   const calculateReward = (question: string, answer: string): number => {
@@ -128,9 +120,13 @@ export function TrainingForm() {
     )
   }, [qaPairs.map(p => p.question + p.answer).join('')])
 
-  const totalEstimatedReward = qaPairs.reduce((sum, pair) => 
-    sum + (pair.estimatedReward || 0), 0
-  )
+  useEffect(() => {
+    const calculateTotal = () => {
+      const total = qaPairs.reduce((sum, pair) => sum + (pair.estimatedReward || 0), 0)
+      setTotalEstimatedReward(total)
+    }
+    calculateTotal()
+  }, [qaPairs])
 
   // Calculate approval rate based on validated pairs
   const calculateApprovalRate = () => {
@@ -216,7 +212,6 @@ export function TrainingForm() {
   }
 
   const approvalRate = 90.5 // This should come from your data
-  const approvalMultiplier = getApprovalRateMultiplier(approvalRate)
 
   const handleFileUpload = async (file: File) => {
     try {
@@ -388,6 +383,16 @@ export function TrainingForm() {
       approvalMultiplier: calculateMultiplier()
     })
   }, [qaPairs, totalEstimatedReward])
+
+  const stepCount = processingSteps.length
+  useEffect(() => {
+    if (isProcessing) {
+      const interval = setInterval(() => {
+        setCurrentStep(prev => (prev + 1) % stepCount)
+      }, 3000)
+      return () => clearInterval(interval)
+    }
+  }, [isProcessing, stepCount])
 
   return (
     <>

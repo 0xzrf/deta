@@ -10,15 +10,18 @@ export default function SwapPage() {
 
   // Initialize Coingecko widget
   useEffect(() => {
+    const container = chartContainerRef.current; // Store the current value
+    if (!container) return; // Early return if container is null
+
     const script = document.createElement('script')
     script.src = "https://widgets.coingecko.com/coingecko-coin-price-chart-widget.js"
     script.async = true
-    chartContainerRef.current?.appendChild(script)
+    container.appendChild(script)
 
     return () => {
-      chartContainerRef.current?.removeChild(script)
+      container.removeChild(script) // Use the stored value in cleanup
     }
-  }, [])
+  }, []) // Empty dependency array ensures this runs only once
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">

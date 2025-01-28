@@ -3,24 +3,31 @@
 import { useRef, useEffect } from "react"
 import { X, TrendingUp, Info } from "lucide-react"
 import { motion } from "framer-motion"
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell, Legend } from "recharts"
+import { LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell, Legend } from "recharts"
+
+interface ChartData {
+  type: 'line' | 'bar' | 'pie'
+  values: Array<{
+    name: string
+    value: number
+    description?: string
+    color?: string
+  }>
+  description: string
+  trend?: {
+    value: number
+    timeframe: string
+  }
+  additionalInfo?: {
+    title: string
+    content: string
+  }[]
+}
 
 interface InfoModalProps {
   title: string
   content: string
-  data?: {
-    type: 'line' | 'bar' | 'pie'
-    values: any[]
-    description: string
-    trend?: {
-      value: number
-      timeframe: string
-    }
-    additionalInfo?: {
-      title: string
-      content: string
-    }[]
-  }
+  data?: ChartData
   onClose: () => void
 }
 
@@ -140,17 +147,17 @@ export function InfoModal({ title, content, data, onClose }: InfoModalProps) {
                   <Bar 
                     dataKey="value" 
                     radius={[4, 4, 0, 0]}
-                    onMouseEnter={(data, index) => {
+                    onMouseEnter={(_data, index) => {
                       const cell = document.querySelector(`[name="Cell-${index}"]`)
                       if (cell) {
-                        const color = data.color || COLORS[index % COLORS.length]
+                        const color = COLORS[index % COLORS.length]
                         cell.setAttribute('fill', HOVER_COLORS[color] || color)
                       }
                     }}
-                    onMouseLeave={(data, index) => {
+                    onMouseLeave={(_data, index) => {
                       const cell = document.querySelector(`[name="Cell-${index}"]`)
                       if (cell) {
-                        const color = data.color || COLORS[index % COLORS.length]
+                        const color = COLORS[index % COLORS.length]
                         cell.setAttribute('fill', color)
                       }
                     }}
