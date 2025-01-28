@@ -8,7 +8,7 @@ import { useWallet } from "@/contexts/wallet-context"
 
 export function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false)
-  const { wallet } = useWallet()
+  const wallet = useWallet()
 
   const menuItems = [
     {

@@ -2,13 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { TrainingForm } from "@/components/training-form"
-import { AnalyticsDashboard } from "@/components/analytics-dashboard"
-import { ModelProgress } from "@/components/model-progress"
-import { MessageSquareText, TrendingUp, HelpCircle, BarChart3, Activity, ChevronDown, CheckCircle, Clock } from "lucide-react"
+import { MessageSquareText, TrendingUp, BarChart3, Activity, ChevronDown, CheckCircle, Clock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useTrainingStats } from "@/contexts/training-stats-context"
 import { useWallet } from "@/contexts/wallet-context"
-import { LeaderboardModal } from "@/components/leaderboard-modal"
 
 type TabType = 'contribute' | 'performance' | 'chat'
 
@@ -27,16 +24,16 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('contribute')
   const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false)
   const { stats } = useTrainingStats()
-  const { wallet } = useWallet()
+  const wallet = useWallet()
   const [globalSubmissions, setGlobalSubmissions] = useState<Submission[]>([])
-  const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [showMultiplierInfo, setShowMultiplierInfo] = useState(false)
-  const [activeFeed, setActiveFeed] = useState<'global' | 'personal'>('global')
+  const [activeFeed, setActiveFeed] = useState<'global' | 'personal'>('personal')
+  const [isHowToOpen, setIsHowToOpen] = useState(false)
 
   // Function to generate a random submission
   const generateSubmission = (): Submission => ({
-    id: Math.random().toString(36).substr(2, 9),
-    user: `${Math.random().toString(36).substr(2, 12)}`,
+    id: Math.random().toString(36).slice(2, 11),
+    user: `${Math.random().toString(36).slice(2, 14)}`,
     status: Math.random() > 0.3 ? 'pending' : Math.random() > 0.5 ? 'approved' : 'rejected',
     timestamp: new Date(),
     reward: Number((Math.random() * 10).toFixed(2)),
@@ -85,11 +82,6 @@ export default function ProfilePage() {
       id: 'performance',
       label: 'Your Performance',
       icon: <TrendingUp className="h-4 w-4" />
-    },
-    {
-      id: 'chat',
-      label: 'Chat',
-      icon: <HelpCircle className="h-4 w-4" />
     },
   ]
 
@@ -148,15 +140,37 @@ export default function ProfilePage() {
         >
           {activeTab === 'contribute' && (
             <div className="space-y-6">
-              {/* Quick How To */}
-              <div className="glass-card p-6">
-                <h2 className="text-xl font-medium text-[#00FF95] mb-4">How To Earn $DeTA</h2>
-                <p className="text-gray-400 leading-relaxed">
-                  Submit high-quality Q&A pairs about Solana development, ecosystem, and technical concepts. 
-                  Each approved submission earns you $DeTA tokens, with rewards varying based on quality and depth. 
-                  Focus on technical accuracy and completeness to maximize your earnings. 
-                  Maintain a high approval rate to unlock bonus multipliers.
-                </p>
+              {/* How To Earn $DeTA */}
+              <div className="glass-card">
+                <button
+                  onClick={() => setIsHowToOpen(!isHowToOpen)}
+                  className="w-full px-4 py-3 flex items-center justify-between text-left"
+                >
+                  <h2 className="text-base font-medium text-[#00FF95]">How To Earn $DeTA</h2>
+                  <ChevronDown 
+                    className={`h-4 w-4 text-[#00FF95] transition-transform duration-200 
+                      ${isHowToOpen ? 'rotate-180' : ''}`} 
+                  />
+                </button>
+                
+                <AnimatePresence>
+                  {isHowToOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden px-4 pb-4 space-y-4"
+                    >
+                      <div className="space-y-2 text-gray-300">
+                        <p><strong>1. Connect Your Wallet</strong><br />Start by connecting your Solana wallet to track your contributions and receive rewards.</p>
+                        <p><strong>2. Submit Q&A Pairs</strong><br />Contribute high-quality Solana-related questions and answers. Focus on technical details, development guides, and common issues.</p>
+                        <p><strong>3. Earn Rewards</strong><br />Get $DeTA tokens for approved submissions. Higher quality contributions and maintaining a good approval rate will earn you more rewards.</p>
+                        <p><strong>4. Claim Your $DeTA</strong><br />Once your submissions are approved, claim your $DeTA tokens directly to your connected wallet.</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
               
               {/* Guidelines Section */}
@@ -248,8 +262,8 @@ export default function ProfilePage() {
                     <div className="flex justify-between items-center">
                       <h2 className="text-lg font-medium text-white">Your Wallet</h2>
                       <p className="text-sm text-gray-400">
-                        {wallet?.publicKey?.toString().slice(0, 4)}...
-                        {wallet?.publicKey?.toString().slice(-4)}
+                        {wallet?.publicKey?.toString()?.slice(0, 4)}...
+                        {wallet?.publicKey?.toString()?.slice(-4)}
                       </p>
                     </div>
                   </div>
@@ -262,55 +276,51 @@ export default function ProfilePage() {
                     <div className="rounded-lg bg-black/20 p-4">
                       <p className="text-sm text-gray-400">Approved Pairs</p>
                       <p className="text-2xl font-bold text-success mt-1">
-                        {stats.approvedPairs} ({stats.approvalRate}%)
+                        {stats?.approvedPairs || 0} ({stats?.approvalRate || 0}%)
                       </p>
                     </div>
                     <div className="rounded-lg bg-black/20 p-4">
-                      <p className="text-sm text-gray-400">Global Rank</p>
-                      <div className="flex items-end justify-between">
-                        <p className="text-2xl font-bold text-gradient mt-1">#42</p>
-                        <button
-                          onClick={() => setShowLeaderboard(true)}
-                          className="text-sm text-[#00FF95] hover:text-[#00FF95]/80 transition-colors"
-                        >
-                          Leaderboard
-                        </button>
-                      </div>
+                      <p className="text-sm text-gray-400">Approved Q&A Pairs</p>
+                      <p className="text-2xl font-bold text-gradient mt-1">{stats?.approvedPairs || 0}</p>
                     </div>
                   </div>
 
                   {/* Multiplier Section with Dropdown */}
                   <div className="rounded-lg bg-black/20 p-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-medium text-white">Reward Multipliers</h3>
-                        <p className="text-sm text-gray-400 mt-1">Your current multiplier: {stats.approvalMultiplier}x</p>
+                    <button
+                      onClick={() => setShowMultiplierInfo(!showMultiplierInfo)}
+                      className="w-full"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-lg font-medium text-white">Reward Multipliers</h3>
+                          <p className="text-sm text-gray-400 mt-1">Your current multiplier: {stats.approvalMultiplier}x</p>
+                        </div>
+                        <ChevronDown 
+                          className={`h-5 w-5 text-[#00FF95] transition-transform duration-200 ${
+                            showMultiplierInfo ? 'rotate-180' : ''
+                          }`}
+                        />
                       </div>
-                      <button
-                        onClick={() => setShowMultiplierInfo(!showMultiplierInfo)}
-                        className="text-sm text-[#00FF95]"
-                      >
-                        <ChevronDown className={`h-4 w-4 transition-transform ${showMultiplierInfo ? 'rotate-180' : ''}`} />
-                      </button>
-                    </div>
+                    </button>
                     
                     {showMultiplierInfo && (
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between text-gray-400">
-                          <span>95%+ Approval Rate</span>
-                          <span className="text-success">2.0x</span>
+                      <div className="mt-4 space-y-3">
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-black/10">
+                          <span className="text-sm text-gray-300">95%+ Approval Rate</span>
+                          <span className="text-sm font-medium text-success">2.0x</span>
                         </div>
-                        <div className="flex justify-between text-gray-400">
-                          <span>90-94% Approval Rate</span>
-                          <span className="text-success">1.75x</span>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-black/10">
+                          <span className="text-sm text-gray-300">90-94% Approval Rate</span>
+                          <span className="text-sm font-medium text-success">1.75x</span>
                         </div>
-                        <div className="flex justify-between text-gray-400">
-                          <span>85-89% Approval Rate</span>
-                          <span className="text-success">1.5x</span>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-black/10">
+                          <span className="text-sm text-gray-300">85-89% Approval Rate</span>
+                          <span className="text-sm font-medium text-success">1.5x</span>
                         </div>
-                        <div className="flex justify-between text-gray-400">
-                          <span>80-84% Approval Rate</span>
-                          <span className="text-success">1.25x</span>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-black/10">
+                          <span className="text-sm text-gray-300">80-84% Approval Rate</span>
+                          <span className="text-sm font-medium text-success">1.25x</span>
                         </div>
                       </div>
                     )}
@@ -334,21 +344,6 @@ export default function ProfilePage() {
                     
                     <div className="flex gap-2 border-b border-white/5">
                       <button
-                        onClick={() => setActiveFeed('global')}
-                        className={`px-4 py-2 text-sm font-medium transition-colors relative
-                          ${activeFeed === 'global' 
-                            ? 'text-[#00FF95]' 
-                            : 'text-gray-400 hover:text-white'}`}
-                      >
-                        Global Feed
-                        {activeFeed === 'global' && (
-                          <motion.div 
-                            layoutId="feedIndicator"
-                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00FF95]"
-                          />
-                        )}
-                      </button>
-                      <button
                         onClick={() => setActiveFeed('personal')}
                         className={`px-4 py-2 text-sm font-medium transition-colors relative
                           ${activeFeed === 'personal' 
@@ -357,6 +352,21 @@ export default function ProfilePage() {
                       >
                         Your Submissions
                         {activeFeed === 'personal' && (
+                          <motion.div 
+                            layoutId="feedIndicator"
+                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00FF95]"
+                          />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setActiveFeed('global')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors relative
+                          ${activeFeed === 'global' 
+                            ? 'text-[#00FF95]' 
+                            : 'text-gray-400 hover:text-white'}`}
+                      >
+                        Global Feed
+                        {activeFeed === 'global' && (
                           <motion.div 
                             layoutId="feedIndicator"
                             className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00FF95]"
@@ -441,53 +451,6 @@ export default function ProfilePage() {
                         ))}
                       </tbody>
                     </table>
-                  </div>
-                </div>
-              </div>
-
-              {/* Leaderboard Modal */}
-              <LeaderboardModal 
-                isOpen={showLeaderboard}
-                onClose={() => setShowLeaderboard(false)}
-              />
-            </div>
-          )}
-
-          {activeTab === 'chat' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* AI Support Chatbot */}
-              <div className="glass-card p-6">
-                <h2 className="text-lg font-medium text-gradient mb-4">DeTA Chat</h2>
-                <div className="rounded-lg bg-black/20 p-4 border border-white/5 h-[500px]">
-                  {/* Add your AI chatbot component here */}
-                  <div className="text-gray-400 text-center mt-20">
-                    DeTA Chat Coming Soon
-                  </div>
-                </div>
-              </div>
-
-              {/* Guidelines */}
-              <div className="glass-card p-6">
-                <h2 className="text-lg font-medium text-gradient mb-4">Submission Guidelines</h2>
-                <div className="rounded-lg bg-black/20 p-4 border border-white/5 space-y-4">
-                  <div>
-                    <h3 className="text-success font-medium mb-2">Earning Higher Rewards</h3>
-                    <ul className="space-y-2 text-gray-300">
-                      <li>• Focus on high-quality, accurate data submissions</li>
-                      <li>• Maintain consistent formatting and structure</li>
-                      <li>• Include detailed context where relevant</li>
-                      <li>• Submit data in batches for efficiency</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="text-success font-medium mb-2">Solana-Specific Guidelines</h3>
-                    <ul className="space-y-2 text-gray-300">
-                      <li>• Include transaction-specific details</li>
-                      <li>• Focus on common Solana operations</li>
-                      <li>• Document error scenarios and solutions</li>
-                      <li>• Provide context for different network versions</li>
-                    </ul>
                   </div>
                 </div>
               </div>

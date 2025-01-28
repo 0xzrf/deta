@@ -266,7 +266,11 @@ export function AnalyticsDashboard() {
             }
             data={
               networkStats.find(s => s.title === activeInfoModal)?.chartData ||
-              metrics.find(m => m.title === activeInfoModal)?.chartData
+              metrics.find(m => m.title === activeInfoModal)?.chartData || {
+                type: 'line',
+                values: [],
+                description: ''
+              }
             }
             onClose={() => setActiveInfoModal(null)}
           />

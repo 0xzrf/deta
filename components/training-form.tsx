@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useRef } from "react"
 import { 
-  ChevronDown, Plus, X, Wallet, Info, Upload, FileText,
+  ChevronDown, Plus, X, Wallet, Info, Upload,
   Clock, Loader2, CheckCircle, XCircle, Brain, Filter, Award
 } from "lucide-react"
 import { ApprovalRateModal } from "./approval-rate-modal"
+import { ExampleModal } from "./example-modal"
 import { useWallet } from "@/contexts/wallet-context"
 import { useTrainingStats } from "@/contexts/training-stats-context"
 import { AnimatePresence, motion } from "framer-motion"
+import { SubmissionProcessing } from "./SubmissionProcessing"
 
 interface QAPair {
   id: number
@@ -16,7 +18,7 @@ interface QAPair {
   answer: string
   isCollapsed: boolean
   estimatedReward?: number
-  validationStatus?: 'pending' | 'processing' | 'accepted' | 'rejected'
+  validationStatus?: 'pending' | 'processing' | 'accepted' | 'rejected' | undefined
   validationMessage?: string
 }
 
@@ -34,8 +36,16 @@ interface ProcessingStep {
   status: 'pending' | 'processing' | 'completed'
 }
 
+interface TrainingStats {
+  submittedPairs: number
+  sessionEstimate: number
+  approvalRate: number
+  approvalMultiplier: number
+  approvedPairs?: number
+}
+
 export function TrainingForm() {
-  const { isConnected, connectWallet, wallet } = useWallet()
+  const { isConnected, connectWallet } = useWallet()
   const { updateStats } = useTrainingStats()
   const [qaPairs, setQaPairs] = useState<QAPair[]>([{ 
     id: 1, 
@@ -82,6 +92,9 @@ export function TrainingForm() {
     }
   ])
   const [showUnlockInfo, setShowUnlockInfo] = useState(false)
+  const [isHowToOpen, setIsHowToOpen] = useState(false)
+  const [showLatestSessions, setShowLatestSessions] = useState(false)
+  const [showExampleModal, setShowExampleModal] = useState<'question' | 'answer' | null>(null)
 
   // Calculate reward based on content length, complexity, and random bonus
   const calculateReward = (question: string, answer: string): number => {
@@ -145,11 +158,10 @@ export function TrainingForm() {
       return
     }
 
-    // Collapse all previous pairs
-    const collapsedPairs = qaPairs.map(pair => ({ ...pair, isCollapsed: true }))
-    
+    // Collapse the current pair and add a new one
     setQaPairs([
-      ...collapsedPairs,
+      ...qaPairs.slice(0, -1), // Keep all pairs except the last one
+      { ...lastPair, isCollapsed: true }, // Collapse the last pair
       { 
         id: Date.now(), 
         question: "", 
@@ -418,10 +430,32 @@ export function TrainingForm() {
 
               {/* Q&A Input Section */}
               <div className="space-y-4">
+                {/* Add this compact summary section */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-black/20">
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-gray-400">
+                      Total Pairs: <span className="text-white font-medium">{qaPairs.length}</span>
+                    </div>
+                    <div className="w-px h-4 bg-white/10"></div>
+                    <div className="text-sm text-gray-400">
+                      Estimated: <span className="text-gradient font-medium">{totalEstimatedReward.toFixed(1)} $DeTA</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleAddPair}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full
+                      bg-[#00FF95]/10 hover:bg-[#00FF95]/20 text-[#00FF95] text-sm
+                      transition-all duration-300"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Pair
+                  </button>
+                </div>
+
                 {qaPairs.map((pair) => (
                   <div
                     key={pair.id}
-                    className="rounded-lg border border-white/10 bg-black/20 p-4"
+                    className="rounded-lg border border-white/10 bg-black/20 p-3" // Reduced padding
                   >
                     {pair.isCollapsed ? (
                       <div className="flex items-center justify-between">
@@ -463,32 +497,44 @@ export function TrainingForm() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-300">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-300">
                             Question
                           </label>
-                          <textarea
-                            value={pair.question}
-                            onChange={(e) => handleChange(pair.id, 'question', e.target.value)}
-                            onKeyPress={(e) => handleKeyPress(e, pair.id)}
-                            className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
-                            placeholder="Enter your question..."
-                            rows={2}
-                          />
+                          <button
+                            onClick={() => setShowExampleModal('question')}
+                            className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
+                          >
+                            example
+                          </button>
                         </div>
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-300">
+                        <textarea
+                          value={pair.question}
+                          onChange={(e) => handleChange(pair.id, 'question', e.target.value)}
+                          onKeyPress={(e) => handleKeyPress(e, pair.id)}
+                          className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
+                          placeholder="Enter your question..."
+                          rows={2}
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-300">
                             Answer
                           </label>
-                          <textarea
-                            value={pair.answer}
-                            onChange={(e) => handleChange(pair.id, 'answer', e.target.value)}
-                            onKeyPress={(e) => handleKeyPress(e, pair.id)}
-                            className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
-                            placeholder="Enter your answer..."
-                            rows={3}
-                          />
+                          <button
+                            onClick={() => setShowExampleModal('answer')}
+                            className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
+                          >
+                            example
+                          </button>
                         </div>
+                        <textarea
+                          value={pair.answer}
+                          onChange={(e) => handleChange(pair.id, 'answer', e.target.value)}
+                          onKeyPress={(e) => handleKeyPress(e, pair.id)}
+                          className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
+                          placeholder="Enter your answer..."
+                          rows={3}
+                        />
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gradient">
                             Estimated: {pair.estimatedReward?.toFixed(1)} $DeTA
@@ -504,17 +550,27 @@ export function TrainingForm() {
                     )}
                   </div>
                 ))}
+              </div>
 
-                {/* Add Q&A Pair Button */}
+              {/* Add this Submit Button section */}
+              <div className="mt-8">
                 <button
-                  onClick={handleAddPair}
-                  className="w-full rounded-lg border border-dashed border-[#00FF95]/20 
-                    bg-[#00FF95]/5 hover:bg-[#00FF95]/10 p-4 text-[#00FF95]
-                    transition-all duration-300 flex items-center justify-center gap-2
-                    group"
+                  onClick={handleSubmit}
+                  className="w-full px-6 py-3 rounded-full bg-[#00FF95] text-black
+                    font-medium text-lg hover:bg-[#00FF95]/90 transition-colors
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isProcessing || qaPairs.length === 0}
+                  aria-busy={isProcessing}
+                  aria-disabled={isProcessing || qaPairs.length === 0}
                 >
-                  <Plus className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                  Add Q&A Pair
+                  {isProcessing ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Processing...
+                    </div>
+                  ) : (
+                    `Submit ${qaPairs.length} Pair${qaPairs.length !== 1 ? 's' : ''}`
+                  )}
                 </button>
               </div>
             </>
@@ -523,12 +579,16 @@ export function TrainingForm() {
 
         {/* Rewards Panel - Takes up 1 column */}
         <div className="glass-card p-6 space-y-6">
-          <h2 className="text-xl font-medium text-[#00FF95] mb-6">Your Rewards</h2>
+          <h2 className="text-xl font-medium text-[#00FF95] mb-4">
+            Your Rewards
+          </h2>
           
           <div className="space-y-4">
             {/* Total Earned */}
             <div className="rounded-lg bg-black/20 p-4">
-              <p className="text-sm text-gray-400">Total $DeTA Earned</p>
+              <p className="text-sm text-gray-400">
+                Total $DeTA Earned
+              </p>
               <p className="text-2xl font-bold text-gradient mt-1">263.4 $DeTA</p>
             </div>
             
@@ -561,12 +621,100 @@ export function TrainingForm() {
             <button
               onClick={claimRewards}
               className="w-full rounded-full px-4 py-3 text-base font-medium
-                button-gradient-border text-[#00FF95]
-                transition-all duration-300 flex items-center justify-center gap-2"
+                bg-[#00FF95] text-black hover:bg-[#00FF95]/90
+                transition-all duration-300 flex items-center justify-center gap-2
+                disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!isConnected}
             >
-              {isConnected ? 'Claim 35.2 $DeTA' : 'Connect Wallet to Claim'}
+              {isConnected ? (
+                <>
+                  <Wallet className="h-4 w-4" />
+                  Claim 35.2 $DeTA
+                </>
+              ) : (
+                <>
+                  <Wallet className="h-4 w-4" />
+                  Connect Wallet to Claim
+                </>
+              )}
             </button>
+
+            {/* Latest Sessions Dropdown */}
+            <div className="mt-6 rounded-lg bg-black/20">
+              <button
+                onClick={() => setShowLatestSessions(!showLatestSessions)}
+                className="w-full px-4 py-3 flex items-center justify-between text-left"
+              >
+                <h3 className="text-base font-medium text-[#00FF95]">Latest Sessions</h3>
+                <ChevronDown 
+                  className={`h-4 w-4 text-[#00FF95] transition-transform duration-200 
+                    ${showLatestSessions ? 'rotate-180' : ''}`} 
+                />
+              </button>
+              
+              <AnimatePresence>
+                {showLatestSessions && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden px-4 pb-4"
+                  >
+                    <div className="space-y-4 mt-4">
+                      {/* Session Items */}
+                      <div className="rounded-lg bg-black/20 p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm text-gray-400">Today, 2:30 PM</p>
+                          <span className="text-sm text-success">+12.4 $DeTA</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-gray-400">
+                            <span className="text-white">8</span> pairs submitted
+                          </div>
+                          <span className="text-gray-500">•</span>
+                          <div className="text-xs text-gray-400">
+                            <span className="text-white">6</span> approved
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="rounded-lg bg-black/20 p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm text-gray-400">Yesterday</p>
+                          <span className="text-sm text-success">+8.6 $DeTA</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-gray-400">
+                            <span className="text-white">5</span> pairs submitted
+                          </div>
+                          <span className="text-gray-500">•</span>
+                          <div className="text-xs text-gray-400">
+                            <span className="text-white">4</span> approved
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="rounded-lg bg-black/20 p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm text-gray-400">Mar 15, 2024</p>
+                          <span className="text-sm text-success">+15.8 $DeTA</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-gray-400">
+                            <span className="text-white">10</span> pairs submitted
+                          </div>
+                          <span className="text-gray-500">•</span>
+                          <div className="text-xs text-gray-400">
+                            <span className="text-white">8</span> approved
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
@@ -607,6 +755,12 @@ export function TrainingForm() {
           </div>
         )}
       </AnimatePresence>
+
+      <ExampleModal 
+        isOpen={showExampleModal !== null}
+        onClose={() => setShowExampleModal(null)}
+        type={showExampleModal || 'question'}
+      />
     </>
   )
 }
