@@ -3,14 +3,15 @@
 import { motion } from "framer-motion"
 import { ArrowRight, Wallet } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useWallet } from "@/contexts/wallet-context"
+import { useWallet } from "@solana/wallet-adapter-react"
+import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 
 export default function GetStartedPage() {
   const router = useRouter()
-  const { isConnected, connectWallet } = useWallet()
-
+  const { connected } = useWallet()
+  const { setVisible } = useWalletModal()
   const handleGetStarted = () => {
-    connectWallet()
+    setVisible(true)
   }
 
   const handleStartEarning = () => {
@@ -32,24 +33,26 @@ export default function GetStartedPage() {
               $DeTA
             </span>
           </h1>
-          
+
           <p className="mt-6 text-lg text-gray-400 max-w-2xl mx-auto">
             Contribute high-quality Question & Answer pairs to the DeTA protocol and earn rewards for your knowledge.
           </p>
 
           {/* Action Buttons */}
           <div className="flex items-center justify-center gap-4 mt-8">
-            <button
-              onClick={handleGetStarted}
-              className="rounded-full px-8 py-3 text-base font-medium
+            {
+              !connected &&
+              <button
+                onClick={handleGetStarted}
+                className="rounded-full px-8 py-3 text-base font-medium
                 button-gradient-border group text-[#00FF95]
                 transition-all duration-300 flex items-center gap-2"
-            >
-              Connect Wallet
-              <Wallet className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            {isConnected && (
+              >
+                Connect Wallet
+                <Wallet className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            } 
+            {connected && (
               <motion.button
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -94,7 +97,7 @@ export default function GetStartedPage() {
               <div>
                 <h3 className="text-lg font-medium text-white mb-2">Submit Q&A Pairs</h3>
                 <p className="text-gray-400">
-                  Contribute high-quality Solana-related questions and answers. Focus on technical details, 
+                  Contribute high-quality Solana-related questions and answers. Focus on technical details,
                   development guides, and common issues.
                 </p>
               </div>
@@ -107,7 +110,7 @@ export default function GetStartedPage() {
               <div>
                 <h3 className="text-lg font-medium text-white mb-2">Earn Rewards</h3>
                 <p className="text-gray-400">
-                  Get $DeTA tokens for approved submissions. Higher quality contributions and maintaining a good 
+                  Get $DeTA tokens for approved submissions. Higher quality contributions and maintaining a good
                   approval rate will earn you more rewards.
                 </p>
               </div>

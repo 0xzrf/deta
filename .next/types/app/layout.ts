@@ -1,4 +1,4 @@
-// File: /Users/khushmansancheti/Desktop/work in progress/Deta/deta-app/app/layout.tsx
+// File: /home/zeref/deta/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

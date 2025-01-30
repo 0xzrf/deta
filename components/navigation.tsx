@@ -4,16 +4,25 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ChevronDown, Twitter, Users, Github, BookOpen, Menu, X, GraduationCap } from "lucide-react"
-import { useWallet } from "@/contexts/wallet-context"
 import { usePathname } from "next/navigation"
 import { ProfileDropdown } from "./profile-dropdown"
-
+import { useWallet } from "@solana/wallet-adapter-react"
+import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 export function Navigation() {
-  const { isConnected, connectWallet } = useWallet()
+  const { connected, publicKey, disconnect } = useWallet()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const isDashboard = pathname === '/dashboard' || pathname.startsWith('/dashboard/')
+  const { setVisible } = useWalletModal()
+
+  const connectWallet = () => {
+    if (connected) {
+      disconnect()
+      return
+    }
+    setVisible(true)
+  }
 
   const communityLinks = [
     {
@@ -122,13 +131,13 @@ export function Navigation() {
                 onClick={connectWallet}
                 className={`
                   rounded-full px-6 py-3 text-base font-medium transition-all duration-300
-                  ${isConnected 
-                    ? 'button-gradient-border text-[#00FF95]' 
+                  ${connected
+                    ? 'button-gradient-border text-[#00FF95]'
                     : 'button-gradient-border text-[#00FF95]'
                   }
                 `}
               >
-                {isConnected ? 'Connected' : 'Connect Wallet'}
+                {connected ? `${publicKey?.toString().slice(0, 6)}...${publicKey?.toString().slice(38, -1)}` : 'Please connect your wallet'}
               </button>
             </div>
           </>
@@ -188,13 +197,13 @@ export function Navigation() {
               onClick={connectWallet}
               className={`
                 rounded-full px-6 py-3 text-base font-medium transition-all duration-300 mt-4
-                ${isConnected 
-                  ? 'button-gradient-border text-[#00FF95]' 
+                ${connected
+                  ? 'button-gradient-border text-[#00FF95]'
                   : 'button-gradient-border text-[#00FF95]'
                 }
               `}
             >
-              {isConnected ? 'Connected' : 'Connect Wallet'}
+              {connected ? `${publicKey?.toString().slice(0, 6)}...${publicKey?.toString().slice(38, -1)}` : 'Please connect your wallet'}
             </button>
           </div>
         </div>

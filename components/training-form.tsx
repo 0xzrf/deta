@@ -7,10 +7,10 @@ import {
 } from "lucide-react"
 import { ApprovalRateModal } from "./approval-rate-modal"
 import { ExampleModal } from "./example-modal"
-import { useWallet } from "@/contexts/wallet-context"
-import { useTrainingStats } from "@/contexts/training-stats-context"
 import { AnimatePresence, motion } from "framer-motion"
 import { SubmissionProcessing } from "./SubmissionProcessing"
+import { useWallet } from "@solana/wallet-adapter-react"
+import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 
 interface QAPair {
   id: number
@@ -37,8 +37,13 @@ interface ProcessingStep {
 }
 
 export function TrainingForm() {
-  const { isConnected, connectWallet } = useWallet()
-  const { updateStats } = useTrainingStats()
+  const { connected } = useWallet()
+  const {setVisible} = useWalletModal()
+
+  const connectWallet = () => {
+    setVisible(true)
+  }
+
   const [qaPairs, setQaPairs] = useState<QAPair[]>([{ 
     id: 1, 
     question: "", 
@@ -196,7 +201,7 @@ export function TrainingForm() {
   }
 
   const claimRewards = async () => {
-    if (!isConnected) {
+    if (!connected) {
       alert("Please connect your wallet to claim rewards")
       return
     }
@@ -209,62 +214,6 @@ export function TrainingForm() {
     if (rate >= 85) return 1.5
     if (rate >= 70) return 1.2
     return 1.0
-  }
-
-  const approvalRate = 90.5 // This should come from your data
-
-  const handleFileUpload = async (file: File) => {
-    try {
-      if (!isConnected) {
-        throw new Error("Please connect your wallet before uploading files")
-      }
-
-      const fileType = file.name.split('.').pop()?.toLowerCase()
-      if (!['csv', 'json'].includes(fileType || '')) {
-        throw new Error("Only CSV and JSON files are supported")
-      }
-
-      // Read and parse file
-      const content = await file.text()
-      let parsedData: QAPair[] = []
-
-      if (fileType === 'csv') {
-        // Parse CSV
-        const rows = content.split('\n').filter(row => row.trim())
-        parsedData = rows.slice(1).map((row, index) => {
-          const [question, answer] = row.split(',').map(cell => cell.trim())
-          return {
-            id: Date.now() + index,
-            question,
-            answer,
-            isCollapsed: false,
-            estimatedReward: 0
-          }
-        })
-      } else {
-        // Parse JSON
-        const jsonData: { question: string; answer: string }[] = JSON.parse(content)
-        parsedData = jsonData.map((item, index) => ({
-          id: Date.now() + index,
-          question: item.question,
-          answer: item.answer,
-          isCollapsed: false,
-          estimatedReward: 0
-        }))
-      }
-
-      setFileUpload({
-        file,
-        preview: parsedData,
-        error: null
-      })
-    } catch (error) {
-      setFileUpload({
-        file: null,
-        preview: null,
-        error: error instanceof Error ? error.message : "Failed to process file"
-      })
-    }
   }
 
   function ValidationStatus({ status, message }: { 
@@ -307,7 +256,7 @@ export function TrainingForm() {
   }
 
   const handleSubmit = async () => {
-    if (!isConnected) {
+    if (!connected) {
       await connectWallet()
       return
     }
@@ -374,26 +323,6 @@ export function TrainingForm() {
     setIsProcessing(false)
   }
 
-  useEffect(() => {
-    // Update stats whenever relevant values change
-    updateStats({
-      submittedPairs: qaPairs.length,
-      sessionEstimate: totalEstimatedReward,
-      approvalRate: calculateApprovalRate(),
-      approvalMultiplier: calculateMultiplier()
-    })
-  }, [qaPairs, totalEstimatedReward])
-
-  const stepCount = processingSteps.length
-  useEffect(() => {
-    if (isProcessing) {
-      const interval = setInterval(() => {
-        setCurrentStep(prev => (prev + 1) % stepCount)
-      }, 3000)
-      return () => clearInterval(interval)
-    }
-  }, [isProcessing, stepCount])
-
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -414,7 +343,6 @@ export function TrainingForm() {
                   <input
                     type="file"
                     ref={fileInputRef}
-                    onChange={handleFileUpload}
                     className="hidden"
                     accept=".json,.csv,.txt"
                   />
@@ -629,9 +557,9 @@ export function TrainingForm() {
                 bg-[#00FF95] text-black hover:bg-[#00FF95]/90
                 transition-all duration-300 flex items-center justify-center gap-2
                 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!isConnected}
+              disabled={!connected}
             >
-              {isConnected ? (
+              {connected ? (
                 <>
                   <Wallet className="h-4 w-4" />
                   Claim 35.2 $DeTA

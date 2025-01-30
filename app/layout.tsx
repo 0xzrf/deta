@@ -1,9 +1,9 @@
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Navigation } from "@/components/navigation"
-import { WalletProvider } from "@/contexts/wallet-context"
-import { TrainingStatsProvider } from "@/contexts/training-stats-context"
+import { useWallet } from "@solana/wallet-adapter-react"
 import { SupportWidget } from "@/components/SupportWidget"
+import AppWalletProvider from "@/components/Solana/AppWalletProvider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -27,25 +27,25 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <WalletProvider>
-          <TrainingStatsProvider>
-            <div className="relative min-h-screen bg-background">
-              {/* Gradient background */}
-              <div className="fixed inset-0 bg-gradient-to-tr from-background via-muted to-background opacity-50" />
-              
-              {/* Content */}
-              <div className="relative">
-                <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-                  <Navigation />
-                  <main className="py-8">
-                    <SupportWidget user={user} />
-                    {children}
-                  </main>
-                </div>
+
+        <AppWalletProvider>
+
+          <div className="relative min-h-screen bg-background">
+            {/* Gradient background */}
+            <div className="fixed inset-0 bg-gradient-to-tr from-background via-muted to-background opacity-50" />
+
+            {/* Content */}
+            <div className="relative">
+              <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+                <Navigation />
+                <main className="py-8">
+                  <SupportWidget user={user} />
+                  {children}
+                </main>
               </div>
             </div>
-          </TrainingStatsProvider>
-        </WalletProvider>
+          </div>
+        </AppWalletProvider>
       </body>
     </html>
   )

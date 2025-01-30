@@ -4,8 +4,7 @@ import { useState, useEffect } from "react"
 import { TrainingForm } from "@/components/training-form"
 import { MessageSquareText, TrendingUp, ChevronDown, CheckCircle, Clock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { useTrainingStats } from "@/contexts/training-stats-context"
-import { useWallet } from "@/contexts/wallet-context"
+import { useWallet } from "@solana/wallet-adapter-react"
 
 type TabType = 'contribute' | 'performance' | 'chat'
 
@@ -23,7 +22,6 @@ interface Submission {
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('contribute')
   const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false)
-  const { stats } = useTrainingStats()
   const wallet = useWallet()
   const [globalSubmissions, setGlobalSubmissions] = useState<Submission[]>([])
   const [showMultiplierInfo, setShowMultiplierInfo] = useState(false)
@@ -262,8 +260,7 @@ export default function ProfilePage() {
                     <div className="flex justify-between items-center">
                       <h2 className="text-lg font-medium text-white">Your Wallet</h2>
                       <p className="text-sm text-gray-400">
-                        {wallet?.publicKey?.toString()?.slice(0, 4)}...
-                        {wallet?.publicKey?.toString()?.slice(-4)}
+                        {wallet.publicKey ? wallet.publicKey.toString()?.slice(0, 4) + "..." + wallet?.publicKey?.toString()?.slice(-4) : "Please connect your wallet"}
                       </p>
                     </div>
                   </div>
@@ -271,17 +268,17 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="rounded-lg bg-black/20 p-4">
                       <p className="text-sm text-gray-400">Total Submissions</p>
-                      <p className="text-2xl font-bold text-white mt-1">{stats.submittedPairs}</p>
+                      <p className="text-2xl font-bold text-white mt-1">0</p>
                     </div>
                     <div className="rounded-lg bg-black/20 p-4">
                       <p className="text-sm text-gray-400">Approved Pairs</p>
                       <p className="text-2xl font-bold text-success mt-1">
-                        {stats?.approvedPairs || 0} ({stats?.approvalRate || 0}%)
+                        0
                       </p>
                     </div>
                     <div className="rounded-lg bg-black/20 p-4">
                       <p className="text-sm text-gray-400">Approved Q&A Pairs</p>
-                      <p className="text-2xl font-bold text-gradient mt-1">{stats?.approvedPairs || 0}</p>
+                      <p className="text-2xl font-bold text-gradient mt-1">0</p>
                     </div>
                   </div>
 
@@ -294,7 +291,7 @@ export default function ProfilePage() {
                       <div className="flex justify-between items-center">
                         <div>
                           <h3 className="text-lg font-medium text-white">Reward Multipliers</h3>
-                          <p className="text-sm text-gray-400 mt-1">Your current multiplier: {stats.approvalMultiplier}x</p>
+                          <p className="text-sm text-gray-400 mt-1">Your current multiplier: 0x</p>
                         </div>
                         <ChevronDown 
                           className={`h-5 w-5 text-[#00FF95] transition-transform duration-200 ${
