@@ -54,94 +54,97 @@ export function Navigation() {
           </Link>
         </div>
 
-        {isDashboard ? (
-          <ProfileDropdown />
-        ) : (
-          <>
-            {/* Mobile Menu Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="lg:hidden p-2 text-gray-300 hover:text-white"
+        >
+          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+
+        {/* Desktop Navigation */}
+        <div className="hidden lg:flex items-center gap-6">
+          {/* GitHub Link */}
+          <a
+            href="https://github.com/yourusername/your-repo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors"
+          >
+            <Github className="h-4 w-4" />
+            <span>GitHub</span>
+          </a>
+
+          {/* Tutorial Link */}
+          <Link
+            href="/tutorial"
+            className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors"
+          >
+            <GraduationCap className="h-4 w-4" />
+            <span>Tutorial</span>
+          </Link>
+
+          {/* Docs Link */}
+          <Link
+            href="/docs"
+            className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors"
+          >
+            <BookOpen className="h-4 w-4" />
+            <span>Docs</span>
+          </Link>
+
+          {/* Community Dropdown */}
+          <div className="relative">
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-gray-300 hover:text-white"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-1 text-sm text-gray-300 hover:text-white transition-colors"
             >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              Community
+              <ChevronDown className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-6">
-              {/* GitHub Link */}
-              <a
-                href="https://github.com/yourusername/your-repo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors"
-              >
-                <Github className="h-4 w-4" />
-                <span>GitHub</span>
-              </a>
-
-              {/* Tutorial Link */}
-              <Link
-                href="/tutorial"
-                className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors"
-              >
-                <GraduationCap className="h-4 w-4" />
-                <span>Tutorial</span>
-              </Link>
-
-              {/* Docs Link */}
-              <Link
-                href="/docs"
-                className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors"
-              >
-                <BookOpen className="h-4 w-4" />
-                <span>Docs</span>
-              </Link>
-
-              {/* Community Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-1 text-sm text-gray-300 hover:text-white transition-colors"
-                >
-                  Community
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {/* Dropdown Menu */}
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-md bg-black/90 backdrop-blur-lg border border-white/10 shadow-lg py-1 z-50">
-                    {communityLinks.map((link) => (
-                      <a
-                        key={link.name}
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
-                      >
-                        {link.icon}
-                        {link.name}
-                      </a>
-                    ))}
-                  </div>
-                )}
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-md bg-black/90 backdrop-blur-lg border border-white/10 shadow-lg py-1 z-50">
+                {communityLinks.map((link) => (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                  >
+                    {link.icon}
+                    {link.name}
+                  </a>
+                ))}
               </div>
+            )}
+          </div>
 
-              {/* Connect Wallet Button */}
+          {/* Connect Wallet Button */}
+          {
+            !isDashboard &&
               <button
                 onClick={connectWallet}
+                onMouseEnter={() => {
+                  if (connected) {
+
+                  }
+                }}
                 className={`
-                  rounded-full px-6 py-3 text-base font-medium transition-all duration-300
-                  ${connected
+                      rounded-full px-6 py-3 text-base font-medium transition-all duration-300
+                      ${connected
                     ? 'button-gradient-border text-[#00FF95]'
                     : 'button-gradient-border text-[#00FF95]'
                   }
-                `}
+                    `}
               >
                 {connected ? `${publicKey?.toString().slice(0, 6)}...${publicKey?.toString().slice(38, -1)}` : 'Please connect your wallet'}
               </button>
-            </div>
-          </>
-        )}
+          }
+          <ProfileDropdown />
+        </div>
+
       </div>
 
       {/* Mobile Menu - Only show on landing page */}
