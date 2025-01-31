@@ -36,7 +36,7 @@ interface ProcessingStep {
   status: 'pending' | 'processing' | 'completed'
 }
 
-export function TrainingForm() {
+export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earned: number, claimed: number, claimable: number, totalClaimable: number}) {
   const { connected } = useWallet()
   const {setVisible} = useWalletModal()
 
@@ -522,13 +522,13 @@ export function TrainingForm() {
               <p className="text-sm text-gray-400">
                 Total $DeTA Earned
               </p>
-              <p className="text-2xl font-bold text-gradient mt-1">263.4 $DeTA</p>
+              <p className="text-2xl font-bold text-gradient mt-1">{earned || 0} $DeTA</p>
             </div>
             
             {/* Total Claimed */}
             <div className="rounded-lg bg-black/20 p-4">
               <p className="text-sm text-gray-400">Total $DeTA Claimed</p>
-              <p className="text-2xl font-bold text-white mt-1">210.6 $DeTA</p>
+              <p className="text-2xl font-bold text-white mt-1">{claimed || 0} $DeTA</p>
             </div>
             
             {/* Locked Amount */}
@@ -542,13 +542,13 @@ export function TrainingForm() {
                   <Info className="h-4 w-4" />
                 </button>
               </div>
-              <p className="text-2xl font-bold text-white mt-1">17.6 $DeTA</p>
+              <p className="text-2xl font-bold text-white mt-1">0 $DeTA</p>
             </div>
             
             {/* Available to Claim */}
             <div className="rounded-lg bg-black/20 p-4">
               <p className="text-sm text-gray-400">Claimable $DeTA</p>
-              <p className="text-2xl font-bold text-gradient mt-1">35.2 $DeTA</p>
+              <p className="text-2xl font-bold text-gradient mt-1">{claimable} $DeTA</p>
             </div>
             
             <button
@@ -562,7 +562,12 @@ export function TrainingForm() {
               {connected ? (
                 <>
                   <Wallet className="h-4 w-4" />
-                  Claim 35.2 $DeTA
+                  {
+                    claimable == 0 ?
+                    "Submit to claim $DeTA"
+                    :
+                    `Claim ${claimable} $DeTA`
+                  }
                 </>
               ) : (
                 <>

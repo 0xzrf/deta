@@ -2,5 +2,6 @@
   "/page": "app/page.js",
   "/get-started/page": "app/get-started/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/analytics/page": "app/analytics/page.js"
+  "/analytics/page": "app/analytics/page.js",
+  "/swap/page": "app/swap/page.js"
 }

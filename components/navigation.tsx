@@ -8,12 +8,14 @@ import { usePathname } from "next/navigation"
 import { ProfileDropdown } from "./profile-dropdown"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
+
 export function Navigation() {
   const { connected, publicKey, disconnect } = useWallet()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
-  const isDashboard = pathname === '/dashboard' || pathname.startsWith('/dashboard/')
+
+  const isDashboard = pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname.startsWith('/analytics')
   const { setVisible } = useWalletModal()
 
   const connectWallet = () => {
@@ -123,7 +125,9 @@ export function Navigation() {
 
           {/* Connect Wallet Button */}
           {
-            !isDashboard &&
+            !isDashboard ?
+            <>
+
               <button
                 onClick={connectWallet}
                 onMouseEnter={() => {
@@ -141,8 +145,10 @@ export function Navigation() {
               >
                 {connected ? `${publicKey?.toString().slice(0, 6)}...${publicKey?.toString().slice(38, -1)}` : 'Please connect your wallet'}
               </button>
+            </>
+            :
+            <ProfileDropdown />
           }
-          <ProfileDropdown />
         </div>
 
       </div>

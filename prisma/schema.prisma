@@ -1,0 +1,32 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  address         String @id @unique
+  total_earned    Int    @default(0)
+  total_claimed   Int    @default(0)
+  claimable       Int    @default(0)
+  submissions     Int    @default(0)
+  approved        Int    @default(0)
+  total_claimable Int    @default(0)
+}
+
+model Global {
+  id                   Int @id @default(1)
+  contrib_30_days      Int
+  token_distributions  Int
+  data_point_submitted Int
+  total_submissions    Int
+}

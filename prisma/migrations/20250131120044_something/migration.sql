@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Global" ALTER COLUMN "id" SET DEFAULT 1,
+ALTER COLUMN "id" DROP DEFAULT;
+DROP SEQUENCE "Global_id_seq";

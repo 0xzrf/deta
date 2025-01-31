@@ -5,8 +5,19 @@ import { TrainingForm } from "@/components/training-form"
 import { MessageSquareText, TrendingUp, ChevronDown, CheckCircle, Clock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useWallet } from "@solana/wallet-adapter-react"
+import axios from "axios"
 
 type TabType = 'contribute' | 'performance' | 'chat'
+
+interface UserData {
+  address: String,
+  total_earned: number,
+  total_claimed: number,
+  claimable: number,
+  submission: number,
+  approved: number,
+  total_claimable: number
+}
 
 interface Submission {
   id: string
@@ -27,6 +38,8 @@ export default function ProfilePage() {
   const [showMultiplierInfo, setShowMultiplierInfo] = useState(false)
   const [activeFeed, setActiveFeed] = useState<'global' | 'personal'>('personal')
   const [isHowToOpen, setIsHowToOpen] = useState(false)
+  const [signedIn, setSignedIn] = useState(true)
+  const [userData, setUserData] = useState<UserData | null>(null)
 
   // Function to generate a random submission
   const generateSubmission = (): Submission => ({
@@ -39,6 +52,29 @@ export default function ProfilePage() {
     question: `Question about ${['Smart Contracts', 'Token Standards', 'RPC Nodes', 'Wallet Integration'][Math.floor(Math.random() * 4)]}`,
     category: ['Development', 'DeFi', 'NFT', 'General'][Math.floor(Math.random() * 4)] as Submission['category']
   })
+
+  useEffect(() => {
+    (async () => {
+
+      if (!wallet.publicKey) {
+        return
+      }
+      const response = await axios.post("/api/get-or-create-user", {
+        walletAddress: wallet.publicKey.toString()
+      })
+
+      if (!response.data.success) {
+        alert(response.data.msg)
+      }
+
+      console.log(response.data.user)
+
+      setUserData(response.data.user)
+      setSignedIn(true)
+
+    })()
+
+  }, [wallet.publicKey])
 
   // Simulate real-time updates
   useEffect(() => {
@@ -83,6 +119,16 @@ export default function ProfilePage() {
     },
   ]
 
+  if (!signedIn) {
+    return (
+      <div>
+        <h1>
+          User not logged in
+        </h1>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
@@ -95,8 +141,8 @@ export default function ProfilePage() {
                 onClick={() => setActiveTab(tab.id as TabType)}
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
-                  ${activeTab === tab.id 
-                    ? 'bg-success/10 text-success' 
+                  ${activeTab === tab.id
+                    ? 'bg-success/10 text-success'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }
                 `}
@@ -113,8 +159,8 @@ export default function ProfilePage() {
                 onClick={() => setActiveTab(tab.id as TabType)}
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
-                  ${activeTab === tab.id 
-                    ? 'bg-success/10 text-success' 
+                  ${activeTab === tab.id
+                    ? 'bg-success/10 text-success'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }
                 `}
@@ -145,12 +191,12 @@ export default function ProfilePage() {
                   className="w-full px-4 py-3 flex items-center justify-between text-left"
                 >
                   <h2 className="text-base font-medium text-[#00FF95]">How To Earn $DeTA</h2>
-                  <ChevronDown 
+                  <ChevronDown
                     className={`h-4 w-4 text-[#00FF95] transition-transform duration-200 
-                      ${isHowToOpen ? 'rotate-180' : ''}`} 
+                      ${isHowToOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
-                
+
                 <AnimatePresence>
                   {isHowToOpen && (
                     <motion.div
@@ -170,7 +216,7 @@ export default function ProfilePage() {
                   )}
                 </AnimatePresence>
               </div>
-              
+
               {/* Guidelines Section */}
               <div className="glass-card">
                 <button
@@ -178,12 +224,12 @@ export default function ProfilePage() {
                   className="w-full px-4 py-3 flex items-center justify-between text-left"
                 >
                   <h2 className="text-base font-medium text-[#00FF95]">Submission Guidelines</h2>
-                  <ChevronDown 
+                  <ChevronDown
                     className={`h-4 w-4 text-[#00FF95] transition-transform duration-200 
-                      ${isGuidelinesOpen ? 'rotate-180' : ''}`} 
+                      ${isGuidelinesOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
-                
+
                 <AnimatePresence>
                   {isGuidelinesOpen && (
                     <motion.div
@@ -199,8 +245,8 @@ export default function ProfilePage() {
                             <span className="font-medium text-white">What to Submit</span><br />
                             Share your knowledge about Solana! Write questions and answers about using Solana, common problems, or how things work. The more helpful your content is, the more <span className="text-[#00FF95] font-semibold">$DeTA</span> you&apos;ll earn.
                           </p>
-                          <a 
-                            href="https://github.com/yourusername/your-repo/docs/solana-guidelines.md" 
+                          <a
+                            href="https://github.com/yourusername/your-repo/docs/solana-guidelines.md"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm text-[#00FF95]/80 hover:text-[#00FF95] transition-colors inline-flex items-center gap-1 mt-1"
@@ -208,13 +254,13 @@ export default function ProfilePage() {
                             More Info ↗
                           </a>
                         </div>
-                        
+
                         <div className="space-y-1">
                           <p className="text-gray-300">
                             <span className="font-medium text-white">Quality Tips</span><br />
                             Make your answers clear and complete. Include examples when possible. The better your answers help others, the more rewards you&apos;ll get!
                           </p>
-                          <a 
+                          <a
                             href="https://github.com/yourusername/your-repo/docs/writing-tips.md"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -223,13 +269,13 @@ export default function ProfilePage() {
                             Writing Tips ↗
                           </a>
                         </div>
-                        
+
                         <div className="space-y-1">
                           <p className="text-gray-300">
                             <span className="font-medium text-white">Earning More</span><br />
                             Keep submitting good content and maintain a high approval rate. The more your submissions get approved, the more <span className="text-[#00FF95] font-semibold">$DeTA</span> you&apos;ll earn with bonus multipliers!
                           </p>
-                          <a 
+                          <a
                             href="https://github.com/yourusername/your-repo/docs/rewards-guide.md"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -243,8 +289,13 @@ export default function ProfilePage() {
                   )}
                 </AnimatePresence>
               </div>
-              
-              <TrainingForm />
+
+              <TrainingForm
+                earned={userData?.total_earned || 0}
+                claimed={userData?.total_claimed || 0}
+                claimable={userData?.claimable || 0}
+                totalClaimable={userData?.total_claimable || 0}
+              />
             </div>
           )}
 
@@ -253,7 +304,7 @@ export default function ProfilePage() {
               {/* Section 1: User Performance Overview */}
               <div className="glass-card p-6 space-y-6">
                 <h1 className="text-2xl font-bold text-gradient mb-6">Performance Dashboard</h1>
-                
+
                 {/* Wallet & Basic Stats */}
                 <div className="grid grid-cols-1 gap-4">
                   <div className="rounded-lg bg-black/20 p-4 border border-white/5">
@@ -268,17 +319,29 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="rounded-lg bg-black/20 p-4">
                       <p className="text-sm text-gray-400">Total Submissions</p>
-                      <p className="text-2xl font-bold text-white mt-1">0</p>
+                      <p className="text-2xl font-bold text-white mt-1">
+                        {
+                          userData && userData.submission
+                        }
+                      </p>
                     </div>
                     <div className="rounded-lg bg-black/20 p-4">
-                      <p className="text-sm text-gray-400">Approved Pairs</p>
+                      <p className="text-sm text-gray-400">Approval rate</p>
                       <p className="text-2xl font-bold text-success mt-1">
-                        0
+                        {
+                          userData &&
+                          (userData.approved / userData.submission) * 100
+                        }
                       </p>
                     </div>
                     <div className="rounded-lg bg-black/20 p-4">
                       <p className="text-sm text-gray-400">Approved Q&A Pairs</p>
-                      <p className="text-2xl font-bold text-gradient mt-1">0</p>
+                      <p className="text-2xl font-bold text-gradient mt-1">
+                        {
+                          userData &&
+                          userData.approved
+                        }
+                      </p>
                     </div>
                   </div>
 
@@ -293,14 +356,13 @@ export default function ProfilePage() {
                           <h3 className="text-lg font-medium text-white">Reward Multipliers</h3>
                           <p className="text-sm text-gray-400 mt-1">Your current multiplier: 0x</p>
                         </div>
-                        <ChevronDown 
-                          className={`h-5 w-5 text-[#00FF95] transition-transform duration-200 ${
-                            showMultiplierInfo ? 'rotate-180' : ''
-                          }`}
+                        <ChevronDown
+                          className={`h-5 w-5 text-[#00FF95] transition-transform duration-200 ${showMultiplierInfo ? 'rotate-180' : ''
+                            }`}
                         />
                       </div>
                     </button>
-                    
+
                     {showMultiplierInfo && (
                       <div className="mt-4 space-y-3">
                         <div className="flex items-center justify-between p-3 rounded-lg bg-black/10">
@@ -338,18 +400,18 @@ export default function ProfilePage() {
                         <span className="text-sm text-gray-400">Live</span>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-2 border-b border-white/5">
                       <button
                         onClick={() => setActiveFeed('personal')}
                         className={`px-4 py-2 text-sm font-medium transition-colors relative
-                          ${activeFeed === 'personal' 
-                            ? 'text-[#00FF95]' 
+                          ${activeFeed === 'personal'
+                            ? 'text-[#00FF95]'
                             : 'text-gray-400 hover:text-white'}`}
                       >
                         Your Submissions
                         {activeFeed === 'personal' && (
-                          <motion.div 
+                          <motion.div
                             layoutId="feedIndicator"
                             className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00FF95]"
                           />
@@ -358,13 +420,13 @@ export default function ProfilePage() {
                       <button
                         onClick={() => setActiveFeed('global')}
                         className={`px-4 py-2 text-sm font-medium transition-colors relative
-                          ${activeFeed === 'global' 
-                            ? 'text-[#00FF95]' 
+                          ${activeFeed === 'global'
+                            ? 'text-[#00FF95]'
                             : 'text-gray-400 hover:text-white'}`}
                       >
                         Global Feed
                         {activeFeed === 'global' && (
-                          <motion.div 
+                          <motion.div
                             layoutId="feedIndicator"
                             className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00FF95]"
                           />
@@ -387,15 +449,15 @@ export default function ProfilePage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {(activeFeed === 'global' ? globalSubmissions : 
-                          globalSubmissions.filter(sub => 
+                        {(activeFeed === 'global' ? globalSubmissions :
+                          globalSubmissions.filter(sub =>
                             sub.user === wallet?.publicKey?.toString()
                           )
                         ).map((sub) => (
                           <tr key={sub.id} className="text-sm">
                             <td className="py-3 text-gray-300">#{sub.id}</td>
                             <td className="py-3 text-gray-300">
-                              {sub.user === wallet?.publicKey?.toString() 
+                              {sub.user === wallet?.publicKey?.toString()
                                 ? 'You'
                                 : `${sub.user.slice(0, 4)}...${sub.user.slice(-4)}`
                               }
@@ -405,8 +467,8 @@ export default function ProfilePage() {
                                 px-2 py-1 rounded-full text-xs
                                 ${sub.category === 'Development' ? 'bg-purple-500/10 text-purple-400' :
                                   sub.category === 'DeFi' ? 'bg-blue-500/10 text-blue-400' :
-                                  sub.category === 'NFT' ? 'bg-pink-500/10 text-pink-400' :
-                                  'bg-gray-500/10 text-gray-400'}
+                                    sub.category === 'NFT' ? 'bg-pink-500/10 text-pink-400' :
+                                      'bg-gray-500/10 text-gray-400'}
                               `}>
                                 {sub.category}
                               </span>
@@ -417,11 +479,11 @@ export default function ProfilePage() {
                             <td className="py-3">
                               <span className={`
                                 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs
-                                ${sub.status === 'approved' 
-                                  ? 'bg-success/10 text-success' 
+                                ${sub.status === 'approved'
+                                  ? 'bg-success/10 text-success'
                                   : sub.status === 'pending'
-                                  ? 'bg-yellow-500/10 text-yellow-500'
-                                  : 'bg-red-500/10 text-red-500'
+                                    ? 'bg-yellow-500/10 text-yellow-500'
+                                    : 'bg-red-500/10 text-red-500'
                                 }
                               `}>
                                 {sub.status === 'approved' && <CheckCircle className="h-3 w-3" />}
