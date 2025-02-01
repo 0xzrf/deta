@@ -256,74 +256,33 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
   }
 
   const handleSubmit = async () => {
-    if (!connected) {
-      await connectWallet()
-      return
-    }
 
-    const submittablePairs = qaPairs.filter(pair =>
-      pair.question.trim() && pair.answer.trim()
-    )
+    const filterredQaPairs = qaPairs.map(data => {
+      if (data.answer == '' || data.question == '') return
+      return {
+        question: data.question,
+        answer: data.answer
+      }
 
-    if (submittablePairs.length === 0 && !fileUpload.preview) {
-      alert("Please add at least one Q&A pair or upload a file before submitting")
-      return
-    }
+    })
 
-    setIsProcessing(true)
 
-    // Set all pairs to pending
-    setQaPairs(current => current.map(pair => ({
-      ...pair,
-      validationStatus: pair.question.trim() && pair.answer.trim() ? 'pending' : undefined
-    })))
+    const fullData = [...filterredQaPairs, ...qaPairsinput].reduce((acc, item) => {
+      //@ts-ignore
+      if (item !== undefined) acc.push(item);
+      return acc;
+    }, []);
 
-    // Process each pair
-    for (let i = 0; i < qaPairs.length; i++) {
-      const pair = qaPairs[i]
-      if (!pair.question.trim() || !pair.answer.trim()) continue
+    console.log(fullData)
 
-      // Update status to processing
-      setQaPairs(current => current.map(p =>
-        p.id === pair.id ? { ...p, validationStatus: 'processing' } : p
-      ))
-
-      // Simulate AI validation
-      await new Promise(resolve => setTimeout(resolve, 1500))
-
-      // Simulate validation result
-      const isAccepted = Math.random() > 0.2 // 80% acceptance rate
-      const validationMessage = isAccepted
-        ? 'Meets quality standards'
-        : 'Low quality or duplicate content'
-
-      setQaPairs(current => current.map(p =>
-        p.id === pair.id ? {
-          ...p,
-          validationStatus: isAccepted ? 'accepted' : 'rejected',
-          validationMessage
-        } : p
-      ))
-    }
-
-    // Calculate final results
-    const results = {
-      acceptedPairs: qaPairs.filter(p => p.validationStatus === 'accepted').length,
-      totalReward: qaPairs.reduce((sum, p) =>
-        p.validationStatus === 'accepted' ? sum + (p.estimatedReward || 0) : sum, 0
-      ),
-      qualityScore: Math.round(
-        (qaPairs.filter(p => p.validationStatus === 'accepted').length /
-          qaPairs.filter(p => p.validationStatus).length) * 100
-      )
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setSubmissionResults(results)
     setIsProcessing(false)
   }
 
+  const [fileSubmitting, setFileSubmitting] = useState(false)
+  const [qaPairsinput, setQaPairsInput] = useState<{ question: string, answer: string }[]>([])
+
   const handleFileSubmit = (event: any) => {
+    setFileSubmitting(true)
     const file = event.target.files[0];
     if (!file) return;
 
@@ -335,10 +294,10 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
 
     const reader = new FileReader();
     reader.onload = (e) => {
+      let jsonData: { question: string, answer: string }[] = []
       try {
         if (fileExtension === "json") {
-          const jsonData = JSON.parse(e.target?.result as string);
-          console.log("JSON Content:", jsonData);
+          jsonData = JSON.parse(e.target?.result as string);
         } else if (fileExtension === "csv") {
           const csvContent = e.target?.result;
           const lines = (csvContent as string)?.split("\n").map(line => line.trim()).filter(line => line);
@@ -346,13 +305,18 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
             const [question, answer] = line.split(",").map(item => item.trim());
             return { question, answer };
           });
-          console.log("CSV Parsed Content:", result.slice(1, -1));
+          jsonData = result.slice(1, -1); // Excluding the first row since it will contain the column names
         }
+
+        setQaPairsInput([...qaPairsinput, ...jsonData])
+
       } catch (error) {
         console.error("Error reading file:", error);
       }
     };
     reader.readAsText(file);
+
+    setFileSubmitting(false)
   }
 
   return (
@@ -383,14 +347,21 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
                     onClick={() => fileInputRef.current?.click()}
                     className="flex flex-col items-center gap-2 w-full"
                   >
-                    <Upload className="h-8 w-8 text-gray-400" />
-                    <p className="text-sm text-gray-400">
-                      Upload a file or click to browse
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Supports JSON, CSV, TXT
-                    </p>
+                    {fileSubmitting ? (
+                      <div className="flex flex-col items-center gap-2 w-full animate-pulse">
+                        <div className="h-8 w-8 bg-gray-300 rounded-full"></div>
+                        <div className="h-4 w-40 bg-gray-300 rounded"></div>
+                        <div className="h-3 w-32 bg-gray-300 rounded"></div>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="h-8 w-8 text-gray-400" />
+                        <p className="text-sm text-gray-400">Upload a file or click to browse</p>
+                        <p className="text-xs text-gray-500">Supports JSON, CSV, TXT</p>
+                      </>
+                    )}
                   </button>
+
                 </div>
               </div>
 
@@ -400,7 +371,7 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
                 <div className="flex items-center justify-between p-3 rounded-lg bg-black/20">
                   <div className="flex items-center gap-4">
                     <div className="text-sm text-gray-400">
-                      Total Pairs: <span className="text-white font-medium">{qaPairs.length}</span>
+                      Total Pairs: <span className="text-white font-medium">{(qaPairs.length - 1) + qaPairsinput.length}</span>
                     </div>
                     <div className="w-px h-4 bg-white/10"></div>
                     <div className="text-sm text-gray-400">
@@ -525,7 +496,7 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
                   className="w-full px-6 py-3 rounded-full bg-[#00FF95] text-black
                     font-medium text-lg hover:bg-[#00FF95]/90 transition-colors
                     disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isProcessing || qaPairs.length === 0}
+                  disabled={isProcessing || (qaPairs.length - 1) + qaPairsinput.length === 0}
                   aria-busy={isProcessing}
                   aria-disabled={isProcessing || qaPairs.length === 0}
                 >
@@ -535,7 +506,7 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
                       Processing...
                     </div>
                   ) : (
-                    `Submit ${qaPairs.length} Pair${qaPairs.length !== 1 ? 's' : ''}`
+                    `Submit ${(qaPairs.length - 1) + qaPairsinput.length}  Pair${qaPairs.length !== 1 ? 's' : ''}`
                   )}
                 </button>
               </div>

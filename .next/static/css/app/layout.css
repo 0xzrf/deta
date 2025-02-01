@@ -1046,6 +1046,12 @@ video {
 .w-px {
   width: 1px;
 }
+.w-32 {
+  width: 8rem;
+}
+.w-40 {
+  width: 10rem;
+}
 .max-w-2xl {
   max-width: 42rem;
 }
@@ -1347,6 +1353,10 @@ video {
 }
 .bg-yellow-500\/10 {
   background-color: rgb(234 179 8 / 0.1);
+}
+.bg-gray-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(209 213 219 / var(--tw-bg-opacity, 1));
 }
 .bg-gradient-to-tr {
   background-image: linear-gradient(to top right, var(--tw-gradient-stops));
