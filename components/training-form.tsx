@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { 
+import {
   ChevronDown, Plus, X, Wallet, Info, Upload,
   Clock, Loader2, CheckCircle, XCircle, Brain, Filter, Award
 } from "lucide-react"
@@ -36,18 +36,18 @@ interface ProcessingStep {
   status: 'pending' | 'processing' | 'completed'
 }
 
-export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earned: number, claimed: number, claimable: number, totalClaimable: number}) {
+export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { earned: number, claimed: number, claimable: number, totalClaimable: number }) {
   const { connected } = useWallet()
-  const {setVisible} = useWalletModal()
+  const { setVisible } = useWalletModal()
 
   const connectWallet = () => {
     setVisible(true)
   }
 
-  const [qaPairs, setQaPairs] = useState<QAPair[]>([{ 
-    id: 1, 
-    question: "", 
-    answer: "", 
+  const [qaPairs, setQaPairs] = useState<QAPair[]>([{
+    id: 1,
+    question: "",
+    answer: "",
     isCollapsed: false,
     estimatedReward: 0
   }])
@@ -96,28 +96,28 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
   // Calculate reward based on content length, complexity, and random bonus
   const calculateReward = (question: string, answer: string): number => {
     if (!question.trim() || !answer.trim()) return 0
-    
+
     const baseReward = 0.2 // Minimum reward
     const maxRandomBonus = 1.8 // Maximum additional reward
     const randomBonus = Math.random() * maxRandomBonus // Random bonus between 0 and 1.8
-    
+
     // Length and complexity multipliers
     const lengthMultiplier = Math.min((question.length + answer.length) / 200, 1)
     const complexityMultiplier = Math.min(
       (question.split(' ').length + answer.split(' ').length) / 20,
       1
     )
-    
+
     // Final reward calculation: base + random bonus, adjusted by quality multipliers
-    const reward = (baseReward + randomBonus) * 
+    const reward = (baseReward + randomBonus) *
       (0.7 + (0.3 * lengthMultiplier * complexityMultiplier)) // Quality affects 30% of reward
-    
+
     return Number(reward.toFixed(2))
   }
 
   // Update rewards whenever Q&A content changes
   useEffect(() => {
-    setQaPairs(pairs => 
+    setQaPairs(pairs =>
       pairs.map(pair => ({
         ...pair,
         estimatedReward: calculateReward(pair.question, pair.answer)
@@ -137,7 +137,7 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
   const calculateApprovalRate = () => {
     const validatedPairs = qaPairs.filter(p => p.validationStatus)
     if (validatedPairs.length === 0) return 0
-    
+
     const approvedPairs = validatedPairs.filter(p => p.validationStatus === 'accepted')
     return Math.round((approvedPairs.length / validatedPairs.length) * 100)
   }
@@ -163,11 +163,11 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
     setQaPairs([
       ...qaPairs.slice(0, -1), // Keep all pairs except the last one
       { ...lastPair, isCollapsed: true }, // Collapse the last pair
-      { 
-        id: Date.now(), 
-        question: "", 
-        answer: "", 
-        isCollapsed: false 
+      {
+        id: Date.now(),
+        question: "",
+        answer: "",
+        isCollapsed: false
       }
     ])
   }
@@ -177,7 +177,7 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
       e.preventDefault()
       const pair = qaPairs.find(p => p.id === pairId)
       if (pair && pair.question.trim() && pair.answer.trim()) {
-        setQaPairs(qaPairs.map(p => 
+        setQaPairs(qaPairs.map(p =>
           p.id === pairId ? { ...p, isCollapsed: true } : p
         ))
       }
@@ -216,9 +216,9 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
     return 1.0
   }
 
-  function ValidationStatus({ status, message }: { 
+  function ValidationStatus({ status, message }: {
     status?: 'pending' | 'processing' | 'accepted' | 'rejected'
-    message?: string 
+    message?: string
   }) {
     if (!status) return null
 
@@ -261,7 +261,7 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
       return
     }
 
-    const submittablePairs = qaPairs.filter(pair => 
+    const submittablePairs = qaPairs.filter(pair =>
       pair.question.trim() && pair.answer.trim()
     )
 
@@ -284,7 +284,7 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
       if (!pair.question.trim() || !pair.answer.trim()) continue
 
       // Update status to processing
-      setQaPairs(current => current.map(p => 
+      setQaPairs(current => current.map(p =>
         p.id === pair.id ? { ...p, validationStatus: 'processing' } : p
       ))
 
@@ -293,11 +293,11 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
 
       // Simulate validation result
       const isAccepted = Math.random() > 0.2 // 80% acceptance rate
-      const validationMessage = isAccepted 
+      const validationMessage = isAccepted
         ? 'Meets quality standards'
         : 'Low quality or duplicate content'
 
-      setQaPairs(current => current.map(p => 
+      setQaPairs(current => current.map(p =>
         p.id === pair.id ? {
           ...p,
           validationStatus: isAccepted ? 'accepted' : 'rejected',
@@ -309,18 +309,50 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
     // Calculate final results
     const results = {
       acceptedPairs: qaPairs.filter(p => p.validationStatus === 'accepted').length,
-      totalReward: qaPairs.reduce((sum, p) => 
+      totalReward: qaPairs.reduce((sum, p) =>
         p.validationStatus === 'accepted' ? sum + (p.estimatedReward || 0) : sum, 0
       ),
       qualityScore: Math.round(
-        (qaPairs.filter(p => p.validationStatus === 'accepted').length / 
-        qaPairs.filter(p => p.validationStatus).length) * 100
+        (qaPairs.filter(p => p.validationStatus === 'accepted').length /
+          qaPairs.filter(p => p.validationStatus).length) * 100
       )
     }
 
     await new Promise(resolve => setTimeout(resolve, 1000))
     setSubmissionResults(results)
     setIsProcessing(false)
+  }
+
+  const handleFileSubmit = (event: any) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const fileExtension = file.name.split(".").pop().toLowerCase();
+    if (fileExtension !== "csv" && fileExtension !== "json") {
+      console.error("Invalid file type. Please upload a CSV or JSON file.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        if (fileExtension === "json") {
+          const jsonData = JSON.parse(e.target?.result as string);
+          console.log("JSON Content:", jsonData);
+        } else if (fileExtension === "csv") {
+          const csvContent = e.target?.result;
+          const lines = (csvContent as string)?.split("\n").map(line => line.trim()).filter(line => line);
+          const result = lines.map(line => {
+            const [question, answer] = line.split(",").map(item => item.trim());
+            return { question, answer };
+          });
+          console.log("CSV Parsed Content:", result.slice(1, -1));
+        }
+      } catch (error) {
+        console.error("Error reading file:", error);
+      }
+    };
+    reader.readAsText(file);
   }
 
   return (
@@ -342,6 +374,7 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
                 <div className="rounded-lg border-2 border-dashed border-white/10 p-6 text-center hover:border-white/20 transition-colors">
                   <input
                     type="file"
+                    onChange={handleFileSubmit}
                     ref={fileInputRef}
                     className="hidden"
                     accept=".json,.csv,.txt"
@@ -401,7 +434,7 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
                           </p>
                           {pair.validationStatus && (
                             <div className="mt-2">
-                              <ValidationStatus 
+                              <ValidationStatus
                                 status={pair.validationStatus}
                                 message={pair.validationMessage}
                               />
@@ -515,7 +548,7 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
           <h2 className="text-xl font-medium text-[#00FF95] mb-4">
             Your Rewards
           </h2>
-          
+
           <div className="space-y-4">
             {/* Total Earned */}
             <div className="rounded-lg bg-black/20 p-4">
@@ -524,13 +557,13 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
               </p>
               <p className="text-2xl font-bold text-gradient mt-1">{earned || 0} $DeTA</p>
             </div>
-            
+
             {/* Total Claimed */}
             <div className="rounded-lg bg-black/20 p-4">
               <p className="text-sm text-gray-400">Total $DeTA Claimed</p>
               <p className="text-2xl font-bold text-white mt-1">{claimed || 0} $DeTA</p>
             </div>
-            
+
             {/* Locked Amount */}
             <div className="rounded-lg bg-black/20 p-4">
               <div className="flex items-center gap-2">
@@ -544,13 +577,13 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
               </div>
               <p className="text-2xl font-bold text-white mt-1">0 $DeTA</p>
             </div>
-            
+
             {/* Available to Claim */}
             <div className="rounded-lg bg-black/20 p-4">
               <p className="text-sm text-gray-400">Claimable $DeTA</p>
               <p className="text-2xl font-bold text-gradient mt-1">{claimable} $DeTA</p>
             </div>
-            
+
             <button
               onClick={claimRewards}
               className="w-full rounded-full px-4 py-3 text-base font-medium
@@ -564,9 +597,9 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
                   <Wallet className="h-4 w-4" />
                   {
                     claimable == 0 ?
-                    "Submit to claim $DeTA"
-                    :
-                    `Claim ${claimable} $DeTA`
+                      "Submit to claim $DeTA"
+                      :
+                      `Claim ${claimable} $DeTA`
                   }
                 </>
               ) : (
@@ -584,12 +617,12 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
                 className="w-full px-4 py-3 flex items-center justify-between text-left"
               >
                 <h3 className="text-base font-medium text-[#00FF95]">Latest Sessions</h3>
-                <ChevronDown 
+                <ChevronDown
                   className={`h-4 w-4 text-[#00FF95] transition-transform duration-200 
-                    ${showLatestSessions ? 'rotate-180' : ''}`} 
+                    ${showLatestSessions ? 'rotate-180' : ''}`}
                 />
               </button>
-              
+
               <AnimatePresence>
                 {showLatestSessions && (
                   <motion.div
@@ -616,7 +649,7 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="rounded-lg bg-black/20 p-4">
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-sm text-gray-400">Yesterday</p>
@@ -632,7 +665,7 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="rounded-lg bg-black/20 p-4">
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-sm text-gray-400">Mar 15, 2024</p>
@@ -657,11 +690,11 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
         </div>
       </div>
 
-      <ApprovalRateModal 
+      <ApprovalRateModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
-      
+
       {/* Unlock Info Modal */}
       <AnimatePresence>
         {showUnlockInfo && (
@@ -678,15 +711,15 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
               >
                 <X className="h-5 w-5" />
               </button>
-              
+
               <h3 className="text-xl font-medium text-[#00FF95] mb-4">$DeTA Unlock Schedule</h3>
               <p className="text-gray-400 leading-relaxed">
-                50% of your total earned $DeTA tokens are locked until the next phase of 
-                the DeTA training protocol. This ensures long-term commitment and quality 
+                50% of your total earned $DeTA tokens are locked until the next phase of
+                the DeTA training protocol. This ensures long-term commitment and quality
                 contributions from our community members.
               </p>
               <p className="text-gray-400 leading-relaxed mt-4">
-                The locked tokens will automatically become available for claiming when 
+                The locked tokens will automatically become available for claiming when
                 the next phase begins.
               </p>
             </motion.div>
@@ -694,7 +727,7 @@ export function TrainingForm({earned, claimed, claimable, totalClaimable}: {earn
         )}
       </AnimatePresence>
 
-      <ExampleModal 
+      <ExampleModal
         isOpen={showExampleModal !== null}
         onClose={() => setShowExampleModal(null)}
         type={showExampleModal || 'question'}
