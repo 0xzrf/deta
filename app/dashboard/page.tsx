@@ -11,12 +11,11 @@ import axios from "axios"
 
 interface UserData {
   address: String,
-  total_earned: number,
   total_claimed: number,
-  claimable: number,
-  submission: number,
+  claimable: number  
+  total_earned: number
   approved: number,
-  total_claimable: number
+  submissions: number
 }
 
 interface Submission {
@@ -28,6 +27,14 @@ interface Submission {
   estimatedReward?: number
   question: string
   category: 'Development' | 'DeFi' | 'NFT' | 'General'
+}
+
+interface userSubmission {
+  walletAddress: string,
+  question: string,
+  answer: string,
+  classification: "approved" | "rejected",
+  createdAt: string
 }
 
 export default function ProfilePage() {
@@ -62,51 +69,70 @@ export default function ProfilePage() {
       if (!wallet.publicKey) {
         return
       }
-      const response = await axios.post("/api/get-or-create-user", {
+      const response1 = await axios.post("/api/get-or-create-user", {
         walletAddress: wallet.publicKey.toString()
       })
 
-      if (!response.data.success) {
-        alert(response.data.msg)
+      if (!response1.data.success) {
+        alert(response1.data.msg)
+      }
+      console.log("response1:",response1.data.user)
+
+      const response2 = await axios.get(`/api/trpc/qa.list?input={"json":{"walletAddress": "${wallet.publicKey.toString()}", "processed": true}}`)
+
+      console.log("response 2",response2.data.result.data)
+      const userInfo = response2.data.result.data
+      const submissions = userInfo.json.pairs.length;
+
+      const approved = userInfo.json.pairs.filter((data: userSubmission) => {
+          return data.classification == "approved"
+      }).length
+
+      const data: UserData = {
+        address: response1.data.address,
+        approved,
+        claimable: response1.data.user.claimable,
+        submissions,
+        total_claimed: response1.data.user.total_claimed,
+        total_earned: 0
       }
 
-      console.log(response.data.user)
-
-      setUserData(response.data.user)
+      setUserData(data)
       setSignedIn(true)
 
     })()
 
   }, [wallet.publicKey])
 
-  // Simulate real-time updates
+
   useEffect(() => {
-    // Initial submissions
-    setGlobalSubmissions(Array.from({ length: 10 }, generateSubmission))
+    (async () => {
 
-    // Add new submissions periodically
-    const addInterval = setInterval(() => {
-      setGlobalSubmissions(prev => [generateSubmission(), ...prev].slice(0, 20))
-    }, 5000)
+      const response = await axios.get(`/api/trpc/qa.list?input={"json":{"processed": true}}`)
 
-    // Update pending submissions
-    const updateInterval = setInterval(() => {
-      setGlobalSubmissions(prev => prev.map(sub => {
-        if (sub.status === 'pending' && Math.random() > 0.7) {
-          return {
-            ...sub,
-            status: Math.random() > 0.2 ? 'approved' : 'rejected',
-            reward: sub.estimatedReward
-          }
+      console.log("Global data:",response.data.result.data)
+
+      const pairs = response.data.result.data
+
+      const submissions = pairs.json.pairs.map((data: userSubmission) => {
+
+        const returnData: Submission = {
+          category: "DeFi",
+          id: Math.floor(Math.random() * 10).toString(),
+          question: data.question,
+          status: data.classification,
+          timestamp: new Date,
+          user: data.walletAddress.toString()
         }
-        return sub
-      }))
-    }, 3000)
 
-    return () => {
-      clearInterval(addInterval)
-      clearInterval(updateInterval)
-    }
+        return returnData
+      })
+
+
+      setGlobalSubmissions(submissions)
+
+    })()
+
   }, [])
 
   const tabs = [
@@ -294,10 +320,10 @@ export default function ProfilePage() {
               </div>
 
               <TrainingForm
-                earned={userData?.total_earned || 0}
+                earned={0}
                 claimed={userData?.total_claimed || 0}
                 claimable={userData?.claimable || 0}
-                totalClaimable={userData?.total_claimable || 0}
+                totalClaimable={0}
               />
             </div>
           )}
@@ -324,7 +350,7 @@ export default function ProfilePage() {
                       <p className="text-sm text-gray-400">Total Submissions</p>
                       <p className="text-2xl font-bold text-white mt-1">
                         {
-                          userData && userData.submission
+                          userData && userData.submissions
                         }
                       </p>
                     </div>
@@ -333,8 +359,8 @@ export default function ProfilePage() {
                       <p className="text-2xl font-bold text-success mt-1">
                         {
                           userData &&
-                          (userData.approved / userData.submission) * 100
-                        }
+                          ((userData.approved / userData.submissions) * 100) || 0
+                        }%
                       </p>
                     </div>
                     <div className="rounded-lg bg-black/20 p-4">
@@ -495,7 +521,7 @@ export default function ProfilePage() {
                               </span>
                             </td>
                             <td className="py-3 text-gray-400">
-                              {sub.status === 'approved' && `${Math.floor((Date.now() - sub.timestamp.getTime()) / 1000)}s ago`}
+                              {sub.status === 'approved' && `${Math.floor((Date.now() - 1) / 1000)}s ago`}
                               {sub.status === 'pending' && 'ETA: 2min'}
                               {sub.status === 'rejected' && '-'}
                             </td>

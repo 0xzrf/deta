@@ -20,7 +20,6 @@ export const POST = async (req: NextRequest) => {
 
 
     if (!user) {
-
         user = await prisma.user.create({
             data: {
                 address: walletAddress

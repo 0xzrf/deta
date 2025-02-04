@@ -14,13 +14,10 @@ datasource db {
 }
 
 model User {
-  address         String @id @unique
-  total_earned    Int    @default(0)
-  total_claimed   Int    @default(0)
-  claimable       Int    @default(0)
-  submissions     Int    @default(0)
-  approved        Int    @default(0)
-  total_claimable Int    @default(0)
+  address       String @id @unique
+  total_claimed Int    @default(0)
+  claimable     Int    @default(0)
+  total_earned  Int    @default(0)
 }
 
 model Global {
