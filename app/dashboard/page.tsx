@@ -5,9 +5,9 @@ import { TrainingForm } from "@/components/training-form"
 import { MessageSquareText, TrendingUp, ChevronDown, CheckCircle, Clock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useWallet } from "@solana/wallet-adapter-react"
+import { useSearchParams, useRouter } from "next/navigation"
 import axios from "axios"
 
-type TabType = 'contribute' | 'performance' | 'chat'
 
 interface UserData {
   address: String,
@@ -31,7 +31,10 @@ interface Submission {
 }
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState<TabType>('contribute')
+  const [activeTab, setActiveTab] = useState<"contribute" | "performance" | "chat">('contribute')
+
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false)
   const wallet = useWallet()
   const [globalSubmissions, setGlobalSubmissions] = useState<Submission[]>([])
@@ -138,10 +141,10 @@ export default function ProfilePage() {
             {tabs.slice(0, 3).map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabType)}
+                onClick={() => router.push(`/dashboard?tab=${tab.id}`)}
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
-                  ${activeTab === tab.id
+                  ${searchParams.get('tab') === tab.id
                     ? 'bg-success/10 text-success'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }
@@ -156,10 +159,10 @@ export default function ProfilePage() {
             {tabs.slice(3).map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabType)}
+                onClick={() => router.push(`/dashboard?tab=${tab.id}`)}
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
-                  ${activeTab === tab.id
+                  ${searchParams.get('tab') === tab.id
                     ? 'bg-success/10 text-success'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }
@@ -182,7 +185,7 @@ export default function ProfilePage() {
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
         >
-          {activeTab === 'contribute' && (
+          {(searchParams.get("tab") == "contribute") && (
             <div className="space-y-6">
               {/* How To Earn $DeTA */}
               <div className="glass-card">
@@ -299,7 +302,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {activeTab === 'performance' && (
+          {(searchParams.get("tab") == "performance") && (
             <div className="space-y-6">
               {/* Section 1: User Performance Overview */}
               <div className="glass-card p-6 space-y-6">

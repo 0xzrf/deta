@@ -76,18 +76,19 @@ export function ProfileDropdown() {
                 className="absolute right-0 mt-2 w-48 rounded-lg bg-black/90 backdrop-blur-lg 
                 border border-white/10 shadow-lg py-1 z-50"
               >
-                {menuItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 
+                {menuItems.map((item, i) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 
                     hover:text-white hover:bg-white/5 transition-colors"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {item.icon}
-                    {item.name}
-                  </Link>
-                ))}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.icon}
+                      {item.name}
+                    </Link>
+                  )
+                )}
               </motion.div>
             )}
           </AnimatePresence>

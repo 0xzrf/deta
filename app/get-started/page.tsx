@@ -15,7 +15,7 @@ export default function GetStartedPage() {
   }
 
   const handleStartEarning = () => {
-    router.push('/dashboard')
+    router.push('/dashboard?tab=contribute')
   }
 
   return (

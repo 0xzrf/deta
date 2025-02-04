@@ -70,7 +70,7 @@ export default function Home() {
               className="inline-block text-[#00FF95]"
               style={{
                 textShadow: '0 0 20px rgba(0, 255, 149, 0.3)'
-              }}
+              }}  
             >
               {rotatingWords[currentWordIndex]}
             </motion.span>
