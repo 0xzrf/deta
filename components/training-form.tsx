@@ -11,6 +11,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { SubmissionProcessing } from "./SubmissionProcessing"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
+import axios from "axios"
 
 interface QAPair {
   id: number
@@ -37,7 +38,7 @@ interface ProcessingStep {
 }
 
 export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { earned: number, claimed: number, claimable: number, totalClaimable: number }) {
-  const { connected } = useWallet()
+  const { connected, publicKey } = useWallet()
   const { setVisible } = useWalletModal()
 
   const connectWallet = () => {
@@ -267,13 +268,22 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
     })
 
 
-    const fullData = [...filterredQaPairs, ...qaPairsinput].reduce((acc, item) => {
+    const pairs = [...filterredQaPairs, ...qaPairsinput].reduce((acc, item) => {
       //@ts-ignore
       if (item !== undefined) acc.push(item);
       return acc;
     }, []);
 
-    console.log(fullData)
+    console.log(pairs)
+
+    const payload = {
+      json: {
+        walletAddress: publicKey?.toString(),
+        pairs
+      }
+    }
+
+    await axios.post("/api/trpc/qa.submit", pay)
 
     setIsProcessing(false)
   }
