@@ -15,7 +15,9 @@ interface UserData {
   claimable: number  
   total_earned: number
   approved: number,
-  submissions: number
+  submissions: number,
+  tokens: number
+  multiplier: string
 }
 
 interface Submission {
@@ -34,7 +36,8 @@ interface userSubmission {
   question: string,
   answer: string,
   classification: "approved" | "rejected",
-  createdAt: string
+  createdAt: string,
+  tokens: number
 }
 
 export default function ProfilePage() {
@@ -51,18 +54,6 @@ export default function ProfilePage() {
   const [signedIn, setSignedIn] = useState(true)
   const [userData, setUserData] = useState<UserData | null>(null)
 
-  // Function to generate a random submission
-  const generateSubmission = (): Submission => ({
-    id: Math.random().toString(36).slice(2, 11),
-    user: `${Math.random().toString(36).slice(2, 14)}`,
-    status: Math.random() > 0.3 ? 'pending' : Math.random() > 0.5 ? 'approved' : 'rejected',
-    timestamp: new Date(),
-    reward: Number((Math.random() * 10).toFixed(2)),
-    estimatedReward: Number((Math.random() * 10).toFixed(2)),
-    question: `Question about ${['Smart Contracts', 'Token Standards', 'RPC Nodes', 'Wallet Integration'][Math.floor(Math.random() * 4)]}`,
-    category: ['Development', 'DeFi', 'NFT', 'General'][Math.floor(Math.random() * 4)] as Submission['category']
-  })
-
   useEffect(() => {
     (async () => {
 
@@ -78,7 +69,7 @@ export default function ProfilePage() {
       }
       console.log("response1:",response1.data.user)
 
-      const response2 = await axios.get(`/api/trpc/qa.list?input={"json":{"walletAddress": "${wallet.publicKey.toString()}", "processed": true}}`)
+      const response2 = await axios.get(`/api/trpc/qa.list?input={"json":{"walletAddress": "${wallet.publicKey.toString()}"}}`)
 
       console.log("response 2",response2.data.result.data)
       const userInfo = response2.data.result.data
@@ -88,13 +79,35 @@ export default function ProfilePage() {
           return data.classification == "approved"
       }).length
 
+      let tokens = 0;
+
+      userInfo.json.pairs.map((data: userSubmission) => {
+        tokens += data.tokens
+      })
+
+      const approval_rate = (approved/submissions) * 100;
+
+      let multiplier = "0";
+
+      if (approval_rate > 95) {
+        multiplier = "2.0"
+      } else if (approval_rate < 95 && approval_rate >= 90) {
+        multiplier == "1.75"
+      } else if (approval_rate < 90 && approval_rate >= 85) {
+        multiplier = "1.5"
+      } else if (approval_rate <85 && approval_rate >= 80) {
+        multiplier = '1.24'
+      }
+
       const data: UserData = {
         address: response1.data.address,
         approved,
         claimable: response1.data.user.claimable,
         submissions,
         total_claimed: response1.data.user.total_claimed,
-        total_earned: 0
+        total_earned: tokens,
+        tokens,
+        multiplier
       }
 
       setUserData(data)
@@ -108,28 +121,32 @@ export default function ProfilePage() {
   useEffect(() => {
     (async () => {
 
-      const response = await axios.get(`/api/trpc/qa.list?input={"json":{"processed": true}}`)
+      const response = await axios.get(`/api/trpc/qa.list?input={"json":{}}`)
 
       console.log("Global data:",response.data.result.data)
 
       const pairs = response.data.result.data
 
+      const category = ['Development' ,'DeFi' ,'NFT','General']
+
       const submissions = pairs.json.pairs.map((data: userSubmission) => {
 
         const returnData: Submission = {
-          category: "DeFi",
+          category: category[Math.floor((Math.random() * 3) + 1)] as "Development" | "DeFi" | "NFT" | "General",
           id: Math.floor(Math.random() * 10).toString(),
           question: data.question,
-          status: data.classification,
-          timestamp: new Date,
-          user: data.walletAddress.toString()
+          status: data.classification == null ? "pending" : (data.classification == "approved" ? "approved" : 'rejected'),
+          timestamp: new Date(data.createdAt),
+          user: data.walletAddress.toString(),
+          reward: data.tokens
         }
 
         return returnData
       })
 
+      const sortedArr = submissions.sort((a: any, b: any) => a.timestamp - b.timestamp )
 
-      setGlobalSubmissions(submissions)
+      setGlobalSubmissions(sortedArr)
 
     })()
 
@@ -320,7 +337,7 @@ export default function ProfilePage() {
               </div>
 
               <TrainingForm
-                earned={0}
+                earned={userData?.total_earned || 0}
                 claimed={userData?.total_claimed || 0}
                 claimable={userData?.claimable || 0}
                 totalClaimable={0}
@@ -383,7 +400,7 @@ export default function ProfilePage() {
                       <div className="flex justify-between items-center">
                         <div>
                           <h3 className="text-lg font-medium text-white">Reward Multipliers</h3>
-                          <p className="text-sm text-gray-400 mt-1">Your current multiplier: 0x</p>
+                          <p className="text-sm text-gray-400 mt-1">Your current multiplier: {userData?.multiplier || 0}x</p>
                         </div>
                         <ChevronDown
                           className={`h-5 w-5 text-[#00FF95] transition-transform duration-200 ${showMultiplierInfo ? 'rotate-180' : ''
@@ -482,7 +499,13 @@ export default function ProfilePage() {
                           globalSubmissions.filter(sub =>
                             sub.user === wallet?.publicKey?.toString()
                           )
-                        ).map((sub) => (
+                        ).map((sub, i) => {
+                          
+                          if (i > 20) {
+                            return null
+                          }
+
+                          return (
                           <tr key={sub.id} className="text-sm">
                             <td className="py-3 text-gray-300">#{sub.id}</td>
                             <td className="py-3 text-gray-300">
@@ -521,7 +544,7 @@ export default function ProfilePage() {
                               </span>
                             </td>
                             <td className="py-3 text-gray-400">
-                              {sub.status === 'approved' && `${Math.floor((Date.now() - 1) / 1000)}s ago`}
+                              {sub.status === 'approved' && `${Math.floor((Date.now() - sub.timestamp.getTime()) / 1000)}s ago`}
                               {sub.status === 'pending' && 'ETA: 2min'}
                               {sub.status === 'rejected' && '-'}
                             </td>
@@ -536,7 +559,7 @@ export default function ProfilePage() {
                               {sub.status === 'rejected' && '-'}
                             </td>
                           </tr>
-                        ))}
+                        )})}
                       </tbody>
                     </table>
                   </div>

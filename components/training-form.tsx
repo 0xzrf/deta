@@ -283,9 +283,14 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
       }
     }
 
-    await axios.post("/api/trpc/qa.submit", pay)
+    const response = await axios.post("/api/trpc/qa.submit", payload)
+
+    if (response.data.result.data.json.success) {
+      alert("Successfully submitted the qa pair.")
+    }
 
     setIsProcessing(false)
+
   }
 
   const [fileSubmitting, setFileSubmitting] = useState(false)
