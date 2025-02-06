@@ -1,7 +1,3 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/api/get-or-create-user/route": "app/api/get-or-create-user/route.js",
-  "/api/trpc/[trpc]/route": "app/api/trpc/[trpc]/route.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js"
+  "/api/trpc/[trpc]/route": "app/api/trpc/[trpc]/route.js"
 }

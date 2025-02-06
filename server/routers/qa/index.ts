@@ -1,8 +1,9 @@
 import { QAClassificationStorage } from "../r2";
-import { QAClassifier } from "../filter";
+import { QAClassifier, RewardCalculator } from "../filter";
 import { QAPairSchema, QAPair } from "@/server/schemas/qa";
 import { createTRPCRouter, publicProcedure } from "@/server/trpc";
 import { TRPCError } from "@trpc/server";
+import { env } from "@/env";
 import { z } from "zod";
 
 const storage = new QAClassificationStorage();
@@ -43,11 +44,12 @@ export const qaRouter = createTRPCRouter({
     }),
 
   process: publicProcedure
-    .input(z.object({ batchSize: z.number().min(1).max(1010).default(10) }))
+    .input(z.object({ batchSize: z.number().min(1).max(100).default(10) }))
     .mutation(async ({ input }) => {
       try {
         let processed = 0;
         let continuationToken: string | undefined;
+        const currentStage = env.CURRENT_STAGE;
 
         while (processed < input.batchSize) {
           const { objects, nextToken } = await storage.listObjects(
@@ -62,10 +64,47 @@ export const qaRouter = createTRPCRouter({
             if (pair.processed) continue;
 
             const classificationResult = await classifier.classify(pair);
+            let tokens = 0;
+
+            if (classificationResult.finalDecision === "approved") {
+              const approvingRatings = classificationResult.modelResponses
+                .filter((r) => r.decision === "approved" && r.qualityRating)
+                .map((r) => r.qualityRating!);
+
+              const qualityRating =
+                approvingRatings.length > 0
+                  ? approvingRatings.reduce((a, b) => a + b, 0) /
+                    approvingRatings.length
+                  : 5;
+              const userPairs = await storage.listUserPairs(pair.walletAddress);
+              const processedPairs = userPairs.filter((p) => p.processed);
+              const approvedCount = processedPairs.filter(
+                (p) => p.classification === "approved"
+              ).length;
+              const approvalRate =
+                processedPairs.length > 0
+                  ? (approvedCount / processedPairs.length) * 100
+                  : 50;
+              const baseReward = RewardCalculator.getBaseReward(currentStage);
+              const qualityMultiplier =
+                RewardCalculator.calculateQualityMultiplier(qualityRating);
+              const approvalMultiplier =
+                RewardCalculator.calculateApprovalMultiplier(approvalRate);
+              const web3Multiplier = 2.5;
+
+              tokens = Math.floor(
+                baseReward *
+                  qualityMultiplier *
+                  approvalMultiplier *
+                  web3Multiplier
+              );
+            }
+
             await storage.saveJSON(obj.Key, {
               ...pair,
               classification: classificationResult.finalDecision,
               modelResponses: classificationResult.modelResponses,
+              tokens,
               processed: true,
               updatedAt: new Date(),
             });
@@ -140,6 +179,7 @@ export const qaRouter = createTRPCRouter({
             question: pair.question,
             answer: pair.answer,
             classification: pair.classification,
+            tokens: pair.tokens,
             createdAt: pair.createdAt,
           })),
           nextCursor: nextToken,

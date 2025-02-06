@@ -6,6 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import type { HttpRequest } from "@aws-sdk/protocol-http";
 import { env } from "@/env";
+import { QAPair } from "@/server/schemas/qa";
 
 export class QAClassificationStorage {
   private client: S3Client;
@@ -14,6 +15,35 @@ export class QAClassificationStorage {
   constructor() {
     this.client = this.createS3Client();
     this.bucket = env.CLOUDFLARE_BUCKET_NAME;
+  }
+
+  async listUserPairs(walletAddress: string): Promise<QAPair[]> {
+    let continuationToken: string | undefined;
+    const allPairs: QAPair[] = [];
+
+    do {
+      const { objects, nextToken } = await this.listObjects(
+        "qa/",
+        continuationToken
+      );
+
+      const pairs = await Promise.all(
+        objects.map(async (obj) => {
+          if (!obj.Key) return null;
+          try {
+            const pair = await this.getJSON<QAPair>(obj.Key);
+            return pair.walletAddress === walletAddress ? pair : null;
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      allPairs.push(...pairs.filter((p): p is QAPair => p !== null));
+      continuationToken = nextToken;
+    } while (continuationToken);
+
+    return allPairs;
   }
 
   private createS3Client() {

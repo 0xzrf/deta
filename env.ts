@@ -15,6 +15,7 @@ export const env = createEnv({
     CLOUDFLARE_SECRET_ACCESS_KEY: z.string(),
     CLOUDFLARE_BUCKET_NAME: z.string(),
     TOGETHER_API: z.string(),
+    CURRENT_STAGE: z.string(),
   },
 
   /**
@@ -37,6 +38,7 @@ export const env = createEnv({
     CLOUDFLARE_SECRET_ACCESS_KEY: process.env.CLOUDFLARE_SECRET_ACCESS_KEY,
     CLOUDFLARE_BUCKET_NAME: process.env.CLOUDFLARE_BUCKET_NAME,
     TOGETHER_API: process.env.TOGETHER_API,
+    CURRENT_STAGE: process.env.CURRENT_STAGE,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

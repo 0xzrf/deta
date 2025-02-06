@@ -6,12 +6,41 @@ type ModelDecision = "approved" | "rejected";
 interface ModelResponse {
   name: string;
   decision: ModelDecision;
+  qualityRating?: number;
   rawResponse: string | null;
 }
 
 interface ClassificationResult {
   finalDecision: ModelDecision;
   modelResponses: ModelResponse[];
+}
+
+export class RewardCalculator {
+  private static STAGE_MAP: Record<string, number> = {
+    "beta-v1": 500,
+    "beta-v2": 425,
+    "stage-1": 361,
+    "stage-2": 307,
+    "stage-3": 261,
+    "stage-4": 222,
+    "stage-5": 189,
+    "stage-6": 161,
+    "stage-7": 137,
+    "stage-8": 116,
+  };
+
+  static getBaseReward(stage: string): number {
+    return this.STAGE_MAP[stage] || 0;
+  }
+
+  static calculateQualityMultiplier(rating: number): number {
+    return 0.6 + (Math.min(10, Math.max(1, rating)) - 1) * 0.1;
+  }
+
+  static calculateApprovalMultiplier(approvalRate: number): number {
+    const normalized = (Math.min(100, Math.max(0, approvalRate)) - 50) / 50;
+    return 1 + Math.pow(normalized, 2) * 0.5;
+  }
 }
 
 export class QAClassifier {
@@ -46,6 +75,7 @@ export class QAClassifier {
 
   private parseModelResponse(raw: string): {
     decision: ModelDecision;
+    qualityRating?: number;
   } {
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
@@ -68,7 +98,11 @@ export class QAClassifier {
       const decision = result.decision?.toLowerCase()?.startsWith("approved")
         ? "approved"
         : "rejected";
-      return { decision } as { decision: ModelDecision };
+      const qualityRating =
+        typeof result.quality_rating === "number"
+          ? Math.min(10, Math.max(1, result.quality_rating))
+          : undefined;
+      return { decision, qualityRating };
     } catch (e) {
       console.error("Failed to parse JSON response:", { raw, cleaned });
       const decisionMatch = raw.match(/"decision"\s*:\s*"(\w+)"/i);

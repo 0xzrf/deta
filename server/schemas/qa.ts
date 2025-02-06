@@ -6,6 +6,7 @@ export const QAPairSchema = z.object({
   answer: z.string().min(10).max(5000),
   classification: z.enum(["approved", "rejected"]).optional(),
   processed: z.boolean().default(false),
+  tokens: z.number().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date().optional(),
 });
