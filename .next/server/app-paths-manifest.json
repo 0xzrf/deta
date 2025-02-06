@@ -1,6 +1,0 @@
-{
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/api/trpc/[trpc]/route": "app/api/trpc/[trpc]/route.js",
-  "/api/get-or-create-user/route": "app/api/get-or-create-user/route.js",
-  "/dashboard/page": "app/dashboard/page.js"
-}
