@@ -1,5 +1,6 @@
 import Together from "together-ai";
 import { env } from "@/env";
+import type { Category } from "@/server/schemas/qa";
 
 type ModelDecision = "approved" | "rejected";
 
@@ -7,11 +8,13 @@ interface ModelResponse {
   name: string;
   decision: ModelDecision;
   qualityRating?: number;
+  category: Category;
   rawResponse: string | null;
 }
 
 interface ClassificationResult {
   finalDecision: ModelDecision;
+  finalCategory: Category;
   modelResponses: ModelResponse[];
 }
 
@@ -45,7 +48,10 @@ export class RewardCalculator {
 
 export class QAClassifier {
   private client = new Together({ apiKey: env.TOGETHER_API });
-  private classificationCache = new Map<string, boolean>();
+  private classificationCache = new Map<
+    string,
+    { finalDecision: ModelDecision; finalCategory: Category }
+  >();
 
   async classify(qa: {
     question: string;
@@ -53,16 +59,17 @@ export class QAClassifier {
   }): Promise<ClassificationResult> {
     const cacheKey = `${qa.question}:${qa.answer}`;
     if (this.classificationCache.has(cacheKey)) {
-      const cachedDecision = this.classificationCache.get(cacheKey)
-        ? "approved"
-        : "rejected";
-      return { finalDecision: cachedDecision, modelResponses: [] };
+      const cached = this.classificationCache.get(cacheKey)!;
+      return { ...cached, modelResponses: [] };
     }
 
     const { cleanQuestion, cleanAnswer } = this.preprocessInput(qa);
     const result = await this.parallelModelAnalysis(cleanQuestion, cleanAnswer);
 
-    this.classificationCache.set(cacheKey, result.finalDecision === "approved");
+    this.classificationCache.set(cacheKey, {
+      finalDecision: result.finalDecision,
+      finalCategory: result.finalCategory,
+    });
     return result;
   }
 
@@ -76,11 +83,31 @@ export class QAClassifier {
   private parseModelResponse(raw: string): {
     decision: ModelDecision;
     qualityRating?: number;
+    category: Category;
   } {
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       raw = jsonMatch[0];
     }
+
+    const allowedCategories: Category[] = [
+      "Development",
+      "DeFi",
+      "NFT",
+      "General",
+      "Security",
+      "Economics",
+      "Governance",
+      "Scalability",
+      "Interoperability",
+      "Privacy",
+      "Consensus",
+      "Smart Contracts",
+      "Wallets",
+      "DAOs",
+      "Layer 2",
+      "Cross-Chain",
+    ];
 
     let cleaned = raw
       .trim()
@@ -102,14 +129,18 @@ export class QAClassifier {
         typeof result.quality_rating === "number"
           ? Math.min(10, Math.max(1, result.quality_rating))
           : undefined;
-      return { decision, qualityRating };
+      const rawCategory = result.category?.trim() || "General";
+      const category = allowedCategories.includes(rawCategory as Category)
+        ? (rawCategory as Category)
+        : "General";
+      return { decision, qualityRating, category };
     } catch (e) {
       console.error("Failed to parse JSON response:", { raw, cleaned });
       const decisionMatch = raw.match(/"decision"\s*:\s*"(\w+)"/i);
       const decision = decisionMatch?.[1]?.toLowerCase()?.startsWith("approved")
         ? "approved"
         : "rejected";
-      return { decision } as { decision: ModelDecision };
+      return { decision, category: "General" };
     }
   }
 
@@ -122,7 +153,6 @@ export class QAClassifier {
 Analyze this QA pair for substantive content relevant to blockchain technology or Solana:
 
 **Content Classification Framework**:
-
 1. BASIC CONTENT (Approved when educational):
 - Explains technical concepts (even basic-intermediate ones) or fundamental concepts required to understand blockchain/Solana
 - Compares technologies/methods
@@ -203,6 +233,25 @@ Analyze this QA pair for substantive content relevant to blockchain technology o
   - Factual inaccuracies in core concepts
   - Vague philosophical discussions without technical anchor
 
+**Category Assignment**:
+  Assign the most specific applicable category from:
+  - Development: Software dev, tools, SDKs, programming
+  - DeFi: Decentralized finance, exchanges, lending
+  - NFT: Non-fungible tokens, digital collectibles
+  - Security: Wallet security, audits, best practices
+  - Economics: Tokenomics, staking, fees
+  - General: General blockchain concepts, intros
+  - Consensus: PoW, PoS, consensus mechanisms
+  - Scalability: Layer 2, throughput optimizations
+  - Privacy: ZK-proofs, anonymous transactions
+  - Interoperability: Cross-chain protocols, bridges
+  - Governance: DAOs, voting, protocol upgrades
+  - Wallets: Key management, transaction signing
+  - Smart Contracts: Development, deployment
+  - DAOs: Decentralized organizations
+  - Layer 2: Rollups, state channels
+  - Cross-Chain: Multi-chain interoperability
+
 **Validation Examples**:
 [Basic/Approved] "How do hardware wallets isolate private keys from internet exposure?"
 [Basic/Approved] "What is the purpose of a seed phrase in cryptocurrency wallets?"
@@ -247,7 +296,7 @@ Analyze this QA pair for substantive content relevant to blockchain technology o
 Question: ${question}
 Answer: ${answer}
 
-Respond with JSON: { "decision": "approved|rejected" }`;
+Respond with JSON: { "decision": "approved|rejected", "category": "Category" }`;
 
     const models = [
       { name: "deepseek", model: "deepseek-ai/DeepSeek-R1" },
@@ -261,7 +310,7 @@ Respond with JSON: { "decision": "approved|rejected" }`;
           messages: [
             {
               role: "system",
-              content: `You are a Web3 QA reviewer. Analyze implementation-level details. Be strict, fair and pragmatic. Also reward genuine learning attempts while filtering low-quality content. Respond ONLY with valid JSON using format: {\"decision\":\"approved|rejected\"} - DO NOT include any other text or explanations`,
+              content: `You are a Web3 QA reviewer. Analyze implementation-level details. Be strict, fair and pragmatic. Also reward genuine learning attempts while filtering low-quality content. Respond ONLY with valid JSON using format: { "decision": "approved|rejected", "category": "Development|DeFi|NFT|General|..." } - DO NOT include any other text or explanations`,
             },
             { role: "user", content: prompt },
           ],
@@ -277,23 +326,21 @@ Respond with JSON: { "decision": "approved|rejected" }`;
           const raw = response?.choices?.[0]?.message?.content?.trim() || "";
           try {
             const parsed = this.parseModelResponse(raw);
-            return { name, decision: parsed.decision, rawResponse: raw };
+            return {
+              name,
+              decision: parsed.decision,
+              category: parsed.category,
+              rawResponse: raw,
+            };
           } catch (e) {
             console.error(`Error parsing JSON from ${name}:`, e, raw);
             return {
               name,
               decision: "rejected" as const,
+              category: "General",
               rawResponse: `PARSE ERROR: ${(e as Error).message} - ${raw}`,
             };
           }
-        })
-        .catch((error): ModelResponse => {
-          console.error(`Error from model ${name}:`, error);
-          return {
-            name,
-            decision: "rejected" as const,
-            rawResponse: null,
-          };
         })
     );
 
@@ -304,6 +351,21 @@ Respond with JSON: { "decision": "approved|rejected" }`;
     const finalDecision: ModelDecision =
       approvedCount >= 2 ? "approved" : "rejected";
 
-    return { finalDecision, modelResponses: responses };
+    const categories = responses.map((r) => r.category);
+    const categoryCounts = categories.reduce((acc, cat) => {
+      acc[cat] = (acc[cat] || 0) + 1;
+      return acc;
+    }, {} as Record<Category, number>);
+
+    let finalCategory: Category = "General";
+    if (Object.keys(categoryCounts).length > 0) {
+      const maxCount = Math.max(...Object.values(categoryCounts));
+      const mostCommon = Object.entries(categoryCounts)
+        .filter(([_, count]) => count === maxCount)
+        .map(([cat]) => cat as Category);
+      finalCategory = mostCommon[0];
+    }
+
+    return { finalDecision, finalCategory, modelResponses: responses };
   }
 }

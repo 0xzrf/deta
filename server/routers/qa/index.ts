@@ -103,6 +103,7 @@ export const qaRouter = createTRPCRouter({
             await storage.saveJSON(obj.Key, {
               ...pair,
               classification: classificationResult.finalDecision,
+              category: classificationResult.finalCategory,
               modelResponses: classificationResult.modelResponses,
               tokens,
               processed: true,
@@ -179,6 +180,7 @@ export const qaRouter = createTRPCRouter({
             question: pair.question,
             answer: pair.answer,
             classification: pair.classification,
+            category: pair.category,
             tokens: pair.tokens,
             createdAt: pair.createdAt,
           })),
