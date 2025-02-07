@@ -92,11 +92,16 @@ export const qaRouter = createTRPCRouter({
                 RewardCalculator.calculateApprovalMultiplier(approvalRate);
               const web3Multiplier = 2.5;
 
+              const categoryMultiplier = RewardCalculator.calculateCategoryMultiplier(
+                classificationResult.finalCategory
+              );
+
+
               tokens = Math.floor(
                 baseReward *
                   qualityMultiplier *
                   approvalMultiplier *
-                  web3Multiplier
+                  categoryMultiplier
               );
             }
 
