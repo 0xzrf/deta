@@ -19,6 +19,7 @@ interface ClassificationResult {
 }
 
 export class RewardCalculator {
+  
   private static STAGE_MAP: Record<string, number> = {
     "beta-v1": 500,
     "beta-v2": 425,
@@ -31,6 +32,20 @@ export class RewardCalculator {
     "stage-7": 137,
     "stage-8": 116,
   };
+
+  static calculateCategoryMultiplier(category: Category): number {
+    const incentiveCategories: Category[] = [
+      "Development",
+      "DeFi",
+      "Smart Contracts",
+      "Layer 2",
+      "Cross-Chain",
+      "Privacy",
+      "Consensus",
+      "Scalability"
+    ];
+    return incentiveCategories.includes(category) ? 2.5 : 1;
+  }
 
   static getBaseReward(stage: string): number {
     return this.STAGE_MAP[stage] || 0;
