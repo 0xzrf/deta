@@ -375,9 +375,7 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
 
               {/* Q&A Input Section */}
               <div className="space-y-4">
-                {
-                  !fileUploaded &&
-                  <>
+                
                     {/* Add this compact summary section */}
                     <div className="flex items-center justify-between p-3 rounded-lg bg-black/20">
                       <div className="flex items-center gap-4">
@@ -386,11 +384,13 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
                         </div>
                         <div className="w-px h-4 bg-white/10"></div>
                         <div className="text-sm text-gray-400">
-                          Estimated: <span className="text-gradient font-medium">{totalEstimatedReward.toFixed(1)} $DeTA</span>
+                          Estimated: <span className="text-gradient font-medium">{qaPairsinput.length} $DeTA</span>
                         </div>
                       </div>
-                      <button
-                        onClick={handleAddPair}
+                      {
+                        !fileUploaded && (
+                          <button
+                            onClick={handleAddPair}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-full
                       bg-[#00FF95]/10 hover:bg-[#00FF95]/20 text-[#00FF95] text-sm
                       transition-all duration-300"
@@ -398,9 +398,9 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
                         <Plus className="h-3.5 w-3.5" />
                         Add Pair
                       </button>
+                        )
+                      }
                     </div>
-                  </>
-                }
 
                 {qaPairs.map((pair) => (
                   <div
