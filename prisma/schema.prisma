@@ -18,12 +18,16 @@ model User {
   total_claimed Int    @default(0)
   claimable     Int    @default(0)
   total_earned  Int    @default(0)
+  bonus_claimed Boolean @default(false)
 }
 
 model Global {
   id                   Int @id @default(1)
-  contrib_30_days      Int
-  token_distributions  Int
-  data_point_submitted Int
-  total_submissions    Int
+  contrib_30_days      Int @default(0)
+  token_distributions  Int @default(0)
+  data_point_submitted Int @default(0)
+  total_submissions    Int @default(0)
+  approval_rate        Int @default(0)
+  training_progress    Int @default(0)
+  average_response_time Int @default(0)
 }

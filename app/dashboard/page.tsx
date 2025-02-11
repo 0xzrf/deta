@@ -12,12 +12,13 @@ import axios from "axios"
 interface UserData {
   address: String,
   total_claimed: number,
-  claimable: number  
+  claimable: number
   total_earned: number
   approved: number,
   submissions: number,
   tokens: number
-  multiplier: string
+  multiplier: string  
+  bonus_claimed: boolean
 }
 
 interface Submission {
@@ -28,7 +29,7 @@ interface Submission {
   reward?: number
   estimatedReward?: number
   question: string
-  category: 'Development' | 'DeFi' | 'NFT' | 'General'
+  category: 'Development' | 'DeFi' | 'NFT' | 'General' | "Unclassified"
 }
 
 interface userSubmission {
@@ -37,7 +38,8 @@ interface userSubmission {
   answer: string,
   classification: "approved" | "rejected",
   createdAt: string,
-  tokens: number
+  tokens: number,
+  category: "Development" | "DeFi" | "NFT" | "General" | null
 }
 
 export default function ProfilePage() {
@@ -67,16 +69,16 @@ export default function ProfilePage() {
       if (!response1.data.success) {
         alert(response1.data.msg)
       }
-      console.log("response1:",response1.data.user)
+      console.log("response1:", response1.data.user)
 
       const response2 = await axios.get(`/api/trpc/qa.list?input={"json":{"walletAddress": "${wallet.publicKey.toString()}"}}`)
 
-      console.log("response 2",response2.data.result.data)
+      console.log("response 2", response2.data.result.data)
       const userInfo = response2.data.result.data
       const submissions = userInfo.json.pairs.length;
 
       const approved = userInfo.json.pairs.filter((data: userSubmission) => {
-          return data.classification == "approved"
+        return data.classification == "approved"
       }).length
 
       let tokens = 0;
@@ -85,7 +87,7 @@ export default function ProfilePage() {
         tokens += data.tokens
       })
 
-      const approval_rate = (approved/submissions) * 100;
+      const approval_rate = (approved / submissions) * 100;
 
       let multiplier = "0";
 
@@ -95,7 +97,7 @@ export default function ProfilePage() {
         multiplier == "1.75"
       } else if (approval_rate < 90 && approval_rate >= 85) {
         multiplier = "1.5"
-      } else if (approval_rate <85 && approval_rate >= 80) {
+      } else if (approval_rate < 85 && approval_rate >= 80) {
         multiplier = '1.24'
       }
 
@@ -107,7 +109,8 @@ export default function ProfilePage() {
         total_claimed: response1.data.user.total_claimed,
         total_earned: tokens,
         tokens,
-        multiplier
+        multiplier,
+        bonus_claimed: response1.data.user.bonus_claimed
       }
 
       setUserData(data)
@@ -123,16 +126,16 @@ export default function ProfilePage() {
 
       const response = await axios.get(`/api/trpc/qa.list?input={"json":{}}`)
 
-      console.log("Global data:",response.data.result.data)
+      console.log("Global data:", response.data.result.data)
 
       const pairs = response.data.result.data
 
-      const category = ['Development' ,'DeFi' ,'NFT','General']
+      const category = ['Development', 'DeFi', 'NFT', 'General']
 
       const submissions = pairs.json.pairs.map((data: userSubmission) => {
 
         const returnData: Submission = {
-          category: category[Math.floor((Math.random() * 3) + 1)] as "Development" | "DeFi" | "NFT" | "General",
+          category: data.category ? data.category : "Unclassified",
           id: Math.floor(Math.random() * 10).toString(),
           question: data.question,
           status: data.classification == null ? "pending" : (data.classification == "approved" ? "approved" : 'rejected'),
@@ -144,7 +147,7 @@ export default function ProfilePage() {
         return returnData
       })
 
-      const sortedArr = submissions.sort((a: any, b: any) => a.timestamp - b.timestamp )
+      const sortedArr = submissions.sort((a: any, b: any) => a.timestamp - b.timestamp)
 
       setGlobalSubmissions(sortedArr)
 
@@ -341,6 +344,7 @@ export default function ProfilePage() {
                 claimed={userData?.total_claimed || 0}
                 claimable={userData?.claimable || 0}
                 totalClaimable={0}
+                bonus_claimed={userData?.bonus_claimed || false}
               />
             </div>
           )}
@@ -500,66 +504,67 @@ export default function ProfilePage() {
                             sub.user === wallet?.publicKey?.toString()
                           )
                         ).map((sub, i) => {
-                          
+
                           if (i > 20) {
                             return null
                           }
 
                           return (
-                          <tr key={sub.id} className="text-sm">
-                            <td className="py-3 text-gray-300">#{sub.id}</td>
-                            <td className="py-3 text-gray-300">
-                              {sub.user === wallet?.publicKey?.toString()
-                                ? 'You'
-                                : `${sub.user.slice(0, 4)}...${sub.user.slice(-4)}`
-                              }
-                            </td>
-                            <td className="py-3">
-                              <span className={`
+                            <tr key={sub.id} className="text-sm">
+                              <td className="py-3 text-gray-300">#{sub.id}</td>
+                              <td className="py-3 text-gray-300">
+                                {sub.user === wallet?.publicKey?.toString()
+                                  ? 'You'
+                                  : `${sub.user.slice(0, 4)}...${sub.user.slice(-4)}`
+                                }
+                              </td>
+                              <td className="py-3">
+                                <span className={`
                                 px-2 py-1 rounded-full text-xs
                                 ${sub.category === 'Development' ? 'bg-purple-500/10 text-purple-400' :
-                                  sub.category === 'DeFi' ? 'bg-blue-500/10 text-blue-400' :
-                                    sub.category === 'NFT' ? 'bg-pink-500/10 text-pink-400' :
-                                      'bg-gray-500/10 text-gray-400'}
+                                    sub.category === 'DeFi' ? 'bg-blue-500/10 text-blue-400' :
+                                      sub.category === 'NFT' ? 'bg-pink-500/10 text-pink-400' :
+                                        'bg-gray-500/10 text-gray-400'}
                               `}>
-                                {sub.category}
-                              </span>
-                            </td>
-                            <td className="py-3 text-gray-300 truncate max-w-[200px]">
-                              {sub.question}
-                            </td>
-                            <td className="py-3">
-                              <span className={`
+                                  {sub.category}
+                                </span>
+                              </td>
+                              <td className="py-3 text-gray-300 truncate max-w-[200px]">
+                                {sub.question}
+                              </td>
+                              <td className="py-3">
+                                <span className={`
                                 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs
                                 ${sub.status === 'approved'
-                                  ? 'bg-success/10 text-success'
-                                  : sub.status === 'pending'
-                                    ? 'bg-yellow-500/10 text-yellow-500'
-                                    : 'bg-red-500/10 text-red-500'
-                                }
+                                    ? 'bg-success/10 text-success'
+                                    : sub.status === 'pending'
+                                      ? 'bg-yellow-500/10 text-yellow-500'
+                                      : 'bg-red-500/10 text-red-500'
+                                  }
                               `}>
-                                {sub.status === 'approved' && <CheckCircle className="h-3 w-3" />}
-                                {sub.status === 'pending' && <Clock className="h-3 w-3 animate-pulse" />}
-                                {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
-                              </span>
-                            </td>
-                            <td className="py-3 text-gray-400">
-                              {sub.status === 'approved' && `${Math.floor((Date.now() - sub.timestamp.getTime()) / 1000)}s ago`}
-                              {sub.status === 'pending' && 'ETA: 2min'}
-                              {sub.status === 'rejected' && '-'}
-                            </td>
-                            <td className="py-3 text-right">
-                              {sub.status === 'approved' && <span className="text-gradient">{sub.reward} $DeTA</span>}
-                              {sub.status === 'pending' && (
-                                <span className="text-gray-400">
-                                  ~{sub.estimatedReward} $DeTA
-                                  <span className="text-xs ml-1">(est.)</span>
+                                  {sub.status === 'approved' && <CheckCircle className="h-3 w-3" />}
+                                  {sub.status === 'pending' && <Clock className="h-3 w-3 animate-pulse" />}
+                                  {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
                                 </span>
-                              )}
-                              {sub.status === 'rejected' && '-'}
-                            </td>
-                          </tr>
-                        )})}
+                              </td>
+                              <td className="py-3 text-gray-400">
+                                {sub.status === 'approved' && `${Math.floor((Date.now() - sub.timestamp.getTime()) / 1000)}s ago`}
+                                {sub.status === 'pending' && 'ETA: 2min'}
+                                {sub.status === 'rejected' && '-'}
+                              </td>
+                              <td className="py-3 text-right">
+                                {sub.status === 'approved' && <span className="text-gradient">{sub.reward} $DeTA</span>}
+                                {sub.status === 'pending' && (
+                                  <span className="text-gray-400">
+                                    ~{sub.estimatedReward} $DeTA
+                                    <span className="text-xs ml-1">(est.)</span>
+                                  </span>
+                                )}
+                                {sub.status === 'rejected' && '-'}
+                              </td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>

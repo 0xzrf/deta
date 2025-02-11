@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import {
   ChevronDown, Plus, X, Wallet, Info, Upload,
-  Clock, Loader2, CheckCircle, XCircle, Brain, Filter, Award
+  Clock, Loader2, CheckCircle, XCircle, Brain, Filter, Award,
+  ArrowUpRight
 } from "lucide-react"
 import { ApprovalRateModal } from "./approval-rate-modal"
 import { ExampleModal } from "./example-modal"
@@ -12,6 +13,7 @@ import { SubmissionProcessing } from "./SubmissionProcessing"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 import axios from "axios"
+import { toast, Toaster } from "sonner"
 
 interface QAPair {
   id: number
@@ -37,7 +39,7 @@ interface ProcessingStep {
   status: 'pending' | 'processing' | 'completed'
 }
 
-export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { earned: number, claimed: number, claimable: number, totalClaimable: number }) {
+export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus_claimed }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean }) {
   const { connected, publicKey } = useWallet()
   const { setVisible } = useWalletModal()
 
@@ -93,6 +95,7 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
   const [showLatestSessions, setShowLatestSessions] = useState(false)
   const [showExampleModal, setShowExampleModal] = useState<'question' | 'answer' | null>(null)
   const [totalEstimatedReward, setTotalEstimatedReward] = useState(0)
+  const [fileUploaded, setFileUploaded] = useState(false)
 
   // Calculate reward based on content length, complexity, and random bonus
   const calculateReward = (question: string, answer: string): number => {
@@ -134,24 +137,6 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
     calculateTotal()
   }, [qaPairs])
 
-  // Calculate approval rate based on validated pairs
-  const calculateApprovalRate = () => {
-    const validatedPairs = qaPairs.filter(p => p.validationStatus)
-    if (validatedPairs.length === 0) return 0
-
-    const approvedPairs = validatedPairs.filter(p => p.validationStatus === 'accepted')
-    return Math.round((approvedPairs.length / validatedPairs.length) * 100)
-  }
-
-  // Calculate reward multiplier based on approval rate
-  const calculateMultiplier = () => {
-    const rate = calculateApprovalRate()
-    if (rate >= 95) return 2.0
-    if (rate >= 90) return 1.75
-    if (rate >= 85) return 1.5
-    if (rate >= 80) return 1.25
-    return 1.0
-  }
 
   const handleAddPair = () => {
     const lastPair = qaPairs[qaPairs.length - 1]
@@ -303,7 +288,8 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
 
     const fileExtension = file.name.split(".").pop().toLowerCase();
     if (fileExtension !== "csv" && fileExtension !== "json") {
-      console.error("Invalid file type. Please upload a CSV or JSON file.");
+      toast.error("Invalid file type. Please upload a CSV or JSON file.");
+      setFileSubmitting(false);
       return;
     }
 
@@ -313,6 +299,9 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
       try {
         if (fileExtension === "json") {
           jsonData = JSON.parse(e.target?.result as string);
+          console.log("QA submitted");
+
+          console.log("I'm after the toaster")
         } else if (fileExtension === "csv") {
           const csvContent = e.target?.result;
           const lines = (csvContent as string)?.split("\n").map(line => line.trim()).filter(line => line);
@@ -320,18 +309,22 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
             const [question, answer] = line.split(",").map(item => item.trim());
             return { question, answer };
           });
-          jsonData = result.slice(1, -1); // Excluding the first row since it will contain the column names
+          jsonData = result.slice(1, -1);
         }
 
         setQaPairsInput([...qaPairsinput, ...jsonData])
 
+        toast.success(`Successfully uploaded ${jsonData.length} Q&A pairs from ${file.name}`);
+
       } catch (error) {
         console.error("Error reading file:", error);
+        toast.error("Error reading file. Please check the file format and try again.");
       }
     };
     reader.readAsText(file);
 
     setFileSubmitting(false)
+    setFileUploaded(true)
   }
 
   return (
@@ -372,7 +365,7 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
                       <>
                         <Upload className="h-8 w-8 text-gray-400" />
                         <p className="text-sm text-gray-400">Upload a file or click to browse</p>
-                        <p className="text-xs text-gray-500">Supports JSON, CSV, TXT</p>
+                        <p className="text-xs text-gray-500">Supports JSON & CSV</p>
                       </>
                     )}
                   </button>
@@ -382,27 +375,32 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
 
               {/* Q&A Input Section */}
               <div className="space-y-4">
-                {/* Add this compact summary section */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-black/20">
-                  <div className="flex items-center gap-4">
-                    <div className="text-sm text-gray-400">
-                      Total Pairs: <span className="text-white font-medium">{(qaPairs.length - 1) + qaPairsinput.length}</span>
-                    </div>
-                    <div className="w-px h-4 bg-white/10"></div>
-                    <div className="text-sm text-gray-400">
-                      Estimated: <span className="text-gradient font-medium">{totalEstimatedReward.toFixed(1)} $DeTA</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleAddPair}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full
+                {
+                  !fileUploaded &&
+                  <>
+                    {/* Add this compact summary section */}
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-black/20">
+                      <div className="flex items-center gap-4">
+                        <div className="text-sm text-gray-400">
+                          Total Pairs: <span className="text-white font-medium">{(qaPairs.length - 1) + qaPairsinput.length}</span>
+                        </div>
+                        <div className="w-px h-4 bg-white/10"></div>
+                        <div className="text-sm text-gray-400">
+                          Estimated: <span className="text-gradient font-medium">{totalEstimatedReward.toFixed(1)} $DeTA</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleAddPair}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full
                       bg-[#00FF95]/10 hover:bg-[#00FF95]/20 text-[#00FF95] text-sm
                       transition-all duration-300"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Add Pair
-                  </button>
-                </div>
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Add Pair
+                      </button>
+                    </div>
+                  </>
+                }
 
                 {qaPairs.map((pair) => (
                   <div
@@ -416,7 +414,7 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
                             Q: {pair.question}
                           </p>
                           <p className="text-sm text-gray-400 truncate">
-                            A: {pair.answer}
+                            A: {pair.answer}  
                           </p>
                           {pair.validationStatus && (
                             <div className="mt-2">
@@ -449,55 +447,61 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium text-gray-300">
-                            Question
-                          </label>
-                          <button
-                            onClick={() => setShowExampleModal('question')}
-                            className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
-                          >
-                            example
-                          </button>
-                        </div>
-                        <textarea
-                          value={pair.question}
-                          onChange={(e) => handleChange(pair.id, 'question', e.target.value)}
-                          onKeyPress={(e) => handleKeyPress(e, pair.id)}
-                          className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
-                          placeholder="Enter your question..."
-                          rows={2}
-                        />
-                        <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium text-gray-300">
-                            Answer
-                          </label>
-                          <button
-                            onClick={() => setShowExampleModal('answer')}
-                            className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
-                          >
-                            example
-                          </button>
-                        </div>
-                        <textarea
-                          value={pair.answer}
-                          onChange={(e) => handleChange(pair.id, 'answer', e.target.value)}
-                          onKeyPress={(e) => handleKeyPress(e, pair.id)}
-                          className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
-                          placeholder="Enter your answer..."
-                          rows={3}
-                        />
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gradient">
-                            Estimated: {pair.estimatedReward?.toFixed(1)} $DeTA
-                          </span>
-                          <button
-                            onClick={() => toggleCollapse(pair.id)}
-                            className="rounded-md px-3 py-1 text-sm text-gray-400 hover:text-white"
-                          >
-                            Collapse
-                          </button>
-                        </div>
+                        {
+                          !fileUploaded &&
+                          <>
+
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium text-gray-300">
+                                Question
+                              </label>
+                              <button
+                                onClick={() => setShowExampleModal('question')}
+                                className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
+                              >
+                                example
+                              </button>
+                            </div>
+                            <textarea
+                              value={pair.question}
+                              onChange={(e) => handleChange(pair.id, 'question', e.target.value)}
+                              onKeyPress={(e) => handleKeyPress(e, pair.id)}
+                              className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
+                              placeholder="Enter your question..."
+                              rows={2}
+                            />
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium text-gray-300">
+                                Answer
+                              </label>
+                              <button
+                                onClick={() => setShowExampleModal('answer')}
+                                className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
+                              >
+                                example
+                              </button>
+                            </div>
+                            <textarea
+                              value={pair.answer}
+                              onChange={(e) => handleChange(pair.id, 'answer', e.target.value)}
+                              onKeyPress={(e) => handleKeyPress(e, pair.id)}
+                              className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
+                              placeholder="Enter your answer..."
+                              rows={3}
+                            />
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gradient">
+                                Estimated: {pair.estimatedReward?.toFixed(1)} $DeTA
+                              </span>
+                              <button
+                                onClick={() => toggleCollapse(pair.id)}
+                                className="rounded-md px-3 py-1 text-sm text-gray-400 hover:text-white"
+                              >
+                                Collapse
+                              </button>
+                            </div>
+                          </>
+                        }
                       </div>
                     )}
                   </div>
@@ -565,36 +569,38 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
             </div>
 
             {/* Available to Claim */}
-            <div className="rounded-lg bg-black/20 p-4">
-              <p className="text-sm text-gray-400">Claimable $DeTA</p>
-              <p className="text-2xl font-bold text-gradient mt-1">{claimable} $DeTA</p>
-            </div>
-
-            <button
-              onClick={claimRewards}
-              className="w-full rounded-full px-4 py-3 text-base font-medium
+            <div className="rounded-lg bg-black/20 p-4 flex justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Claimable $DeTA</p>
+                <p className="text-2xl font-bold text-gradient mt-1">{claimable} $DeTA</p>
+              </div>
+              {
+                !bonus_claimed && (
+                  <a
+                    href={`https://x.com/intent/tweet?text=Hello word`}
+                    target="_blank"
+                    className=" rounded-full px-4 py-3 text-base font-medium
                 bg-[#00FF95] text-black hover:bg-[#00FF95]/90
                 transition-all duration-300 flex items-center justify-center gap-2
                 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!connected}
-            >
-              {connected ? (
-                <>
-                  <Wallet className="h-4 w-4" />
-                  {
-                    claimable == 0 ?
-                      "Submit to claim $DeTA"
-                      :
-                      `Claim ${claimable} $DeTA`
-                  }
-                </>
-              ) : (
-                <>
-                  <Wallet className="h-4 w-4" />
-                  Connect Wallet to Claim
-                </>
-              )}
-            </button>
+                onClick={async () => {
+                  await axios.post("/api/update-bonus", {
+                    walletAddress: publicKey,
+                    bonus: true
+                  })
+
+                  toast.success("Bonus claimed")
+
+                  window.location.reload()
+                }}
+              >
+                <p className="">+5%</p>
+                    <ArrowUpRight className="h-4 w-4" />
+                  </a>
+                )
+              }
+
+            </div>
 
             {/* Latest Sessions Dropdown */}
             <div className="mt-6 rounded-lg bg-black/20">
@@ -672,6 +678,18 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
                 )}
               </AnimatePresence>
             </div>
+            <button
+              onClick={claimRewards}
+              className="w-full rounded-full px-4 py-3 text-base font-medium
+                bg-[#00FF95] text-black hover:bg-[#00FF95]/90
+                transition-all duration-300 flex items-center justify-center gap-2
+                disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!connected || claimable == 0}
+            >
+              Claim ${claimable} $DeTA
+
+            </button>
+
           </div>
         </div>
       </div>
@@ -717,6 +735,8 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable }: { e
         isOpen={showExampleModal !== null}
         onClose={() => setShowExampleModal(null)}
         type={showExampleModal || 'question'}
+      />
+      <Toaster
       />
     </>
   )

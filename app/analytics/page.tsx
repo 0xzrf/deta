@@ -15,11 +15,6 @@ export default function AnalyticsPage() {
       id: 'analytics',
       label: 'Analytics',
       icon: <BarChart3 className="h-4 w-4" />
-    },
-    {
-      id: 'progress',
-      label: 'Progress',
-      icon: <Activity className="h-4 w-4" />
     }
   ]
 
@@ -49,7 +44,6 @@ export default function AnalyticsPage() {
 
       {/* Tab Content */}
       {activeTab === 'analytics' && <AnalyticsDashboard />}
-      {activeTab === 'progress' && <ModelProgress />}
     </div>
   )
 } 
