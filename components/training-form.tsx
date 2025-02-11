@@ -39,13 +39,8 @@ interface ProcessingStep {
   status: 'pending' | 'processing' | 'completed'
 }
 
-export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus_claimed }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean }) {
+export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus_claimed, multiplier }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean, multiplier: number }) {
   const { connected, publicKey } = useWallet()
-  const { setVisible } = useWalletModal()
-
-  const connectWallet = () => {
-    setVisible(true)
-  }
 
   const [qaPairs, setQaPairs] = useState<QAPair[]>([{
     id: 1,
@@ -381,10 +376,10 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-gray-400">
                           Total Pairs: <span className="text-white font-medium">{(qaPairs.length - 1) + qaPairsinput.length}</span>
-                        </div>
+                        </div>  
                         <div className="w-px h-4 bg-white/10"></div>
                         <div className="text-sm text-gray-400">
-                          Estimated: <span className="text-gradient font-medium">{qaPairsinput.length} $DeTA</span>
+                          Estimated: <span className="text-gradient font-medium">{qaPairsinput.length * 500 * multiplier} $DeTA</span>
                         </div>
                       </div>
                       {

@@ -89,17 +89,7 @@ export default function ProfilePage() {
 
       const approval_rate = (approved / submissions) * 100;
 
-      let multiplier = "0";
-
-      if (approval_rate > 95) {
-        multiplier = "2.0"
-      } else if (approval_rate < 95 && approval_rate >= 90) {
-        multiplier == "1.75"
-      } else if (approval_rate < 90 && approval_rate >= 85) {
-        multiplier = "1.5"
-      } else if (approval_rate < 85 && approval_rate >= 80) {
-        multiplier = '1.24'
-      }
+      let multiplier = (1 + (((approval_rate - 50) / 50) ** 2 ) * 0.5).toString()
 
       const data: UserData = {
         address: response1.data.address,
@@ -345,6 +335,7 @@ export default function ProfilePage() {
                 claimable={userData?.claimable || 0}
                 totalClaimable={0}
                 bonus_claimed={userData?.bonus_claimed || false}
+                multiplier={parseFloat(userData?.multiplier || "0")}
               />
             </div>
           )}
