@@ -55,6 +55,7 @@ export default function ProfilePage() {
   const [isHowToOpen, setIsHowToOpen] = useState(false)
   const [signedIn, setSignedIn] = useState(true)
   const [userData, setUserData] = useState<UserData | null>(null)
+  const [personalSubmissions, setPersonalSubmissions] = useState<Submission[]>([])
 
   useEffect(() => {
     (async () => {
@@ -76,6 +77,20 @@ export default function ProfilePage() {
       console.log("response 2", response2.data.result.data)
       const userInfo = response2.data.result.data
       const submissions = userInfo.json.pairs.length;
+
+      const personalSubmissions = userInfo.json.pairs.map((data: userSubmission) => {
+        return {
+          category: data.category ? data.category : "Unclassified",
+          id: Math.floor(Math.random() * 10).toString(),
+          question: data.question,
+          status: data.classification == null ? "pending" : (data.classification == "approved" ? "approved" : 'rejected'),
+          timestamp: new Date(data.createdAt),
+          user: data.walletAddress.toString(),
+          reward: data.tokens
+        }
+      })
+
+      setPersonalSubmissions(personalSubmissions)
 
       const approved = userInfo.json.pairs.filter((data: userSubmission) => {
         return data.classification == "approved"
@@ -103,7 +118,7 @@ export default function ProfilePage() {
         bonus_claimed: response1.data.user.bonus_claimed
       }
 
-      setUserData(data)
+      setUserData (data)
       setSignedIn(true)
 
     })()
@@ -116,11 +131,9 @@ export default function ProfilePage() {
 
       const response = await axios.get(`/api/trpc/qa.list?input={"json":{}}`)
 
-      console.log("Global data:", response.data.result.data)
+      console.log("Global dataaa:", response.data.result.data)
 
       const pairs = response.data.result.data
-
-      const category = ['Development', 'DeFi', 'NFT', 'General']
 
       const submissions = pairs.json.pairs.map((data: userSubmission) => {
 
@@ -138,6 +151,14 @@ export default function ProfilePage() {
       })
 
       const sortedArr = submissions.sort((a: any, b: any) => a.timestamp - b.timestamp)
+
+      const filteredArr = sortedArr.filter((sub: any) => {
+        return sub.user === wallet?.publicKey?.toString()
+      })
+
+      console.log("wallet.publicKey", wallet?.publicKey?.toString())
+
+      console.log("filteredArr", filteredArr)
 
       setGlobalSubmissions(sortedArr)
 
@@ -491,9 +512,7 @@ export default function ProfilePage() {
                       </thead>
                       <tbody className="divide-y divide-white/5">
                         {(activeFeed === 'global' ? globalSubmissions :
-                          globalSubmissions.filter(sub =>
-                            sub.user === wallet?.publicKey?.toString()
-                          )
+                          personalSubmissions
                         ).map((sub, i) => {
 
                           if (i > 20) {
@@ -502,7 +521,7 @@ export default function ProfilePage() {
 
                           return (
                             <tr key={sub.id} className="text-sm">
-                              <td className="py-3 text-gray-300">#{sub.id}</td>
+                              <td className="py-3 text-gray-300">#{i}</td>
                               <td className="py-3 text-gray-300">
                                 {sub.user === wallet?.publicKey?.toString()
                                   ? 'You'

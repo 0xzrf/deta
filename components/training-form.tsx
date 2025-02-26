@@ -238,6 +238,15 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
 
   const handleSubmit = async () => {
 
+    const checkRequest = await axios.get("http://localhost:3001/api/waitlist/stats")
+
+    const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
+
+    if (!match) {
+      toast.error("You are not in the waitlist")
+      return
+    }
+
     const filterredQaPairs = qaPairs.map(data => {
       if (data.answer == '' || data.question == '') return
       return {
@@ -266,7 +275,7 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
     const response = await axios.post("/api/trpc/qa.submit", payload)
 
     if (response.data.result.data.json.success) {
-      alert("Successfully submitted the qa pair.")
+      toast.success("Successfully submitted the qa pair.")
     }
 
     setIsProcessing(false)
@@ -370,22 +379,22 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
 
               {/* Q&A Input Section */}
               <div className="space-y-4">
-                
-                    {/* Add this compact summary section */}
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-black/20">
-                      <div className="flex items-center gap-4">
-                        <div className="text-sm text-gray-400">
-                          Total Pairs: <span className="text-white font-medium">{(qaPairs.length - 1) + qaPairsinput.length}</span>
-                        </div>  
-                        <div className="w-px h-4 bg-white/10"></div>
-                        <div className="text-sm text-gray-400">
-                          Estimated: <span className="text-gradient font-medium">{qaPairsinput.length * 500 * multiplier} $DeTA</span>
-                        </div>
-                      </div>
-                      {
-                        !fileUploaded && (
-                          <button
-                            onClick={handleAddPair}
+
+                {/* Add this compact summary section */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-black/20">
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-gray-400">
+                      Total Pairs: <span className="text-white font-medium">{(qaPairs.length - 1) + qaPairsinput.length}</span>
+                    </div>
+                    <div className="w-px h-4 bg-white/10"></div>
+                    <div className="text-sm text-gray-400">
+                      Estimated: <span className="text-gradient font-medium">{qaPairsinput.length * 500 * multiplier} $DeTA</span>
+                    </div>
+                  </div>
+                  {
+                    !fileUploaded && (
+                      <button
+                        onClick={handleAddPair}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-full
                       bg-[#00FF95]/10 hover:bg-[#00FF95]/20 text-[#00FF95] text-sm
                       transition-all duration-300"
@@ -393,9 +402,9 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
                         <Plus className="h-3.5 w-3.5" />
                         Add Pair
                       </button>
-                        )
-                      }
-                    </div>
+                    )
+                  }
+                </div>
 
                 {qaPairs.map((pair) => (
                   <div
@@ -409,7 +418,7 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
                             Q: {pair.question}
                           </p>
                           <p className="text-sm text-gray-400 truncate">
-                            A: {pair.answer}  
+                            A: {pair.answer}
                           </p>
                           {pair.validationStatus && (
                             <div className="mt-2">
@@ -578,18 +587,18 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
                 bg-[#00FF95] text-black hover:bg-[#00FF95]/90
                 transition-all duration-300 flex items-center justify-center gap-2
                 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={async () => {
-                  await axios.post("/api/update-bonus", {
-                    walletAddress: publicKey,
-                    bonus: true
-                  })
+                    onClick={async () => {
+                      await axios.post("/api/update-bonus", {
+                        walletAddress: publicKey,
+                        bonus: true
+                      })
 
-                  toast.success("Bonus claimed")
+                      toast.success("Bonus claimed")
 
-                  window.location.reload()
-                }}
-              >
-                <p className="">+5%</p>
+                      window.location.reload()
+                    }}
+                  >
+                    <p className="">+5%</p>
                     <ArrowUpRight className="h-4 w-4" />
                   </a>
                 )
