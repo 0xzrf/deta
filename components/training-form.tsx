@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import {
   ChevronDown, Plus, X, Info, Upload,
-  Clock, Loader2, CheckCircle, XCircle, Brain, Filter, Award,
+  Clock, Loader2, CheckCircle, XCircle,
   ArrowUpRight
 } from "lucide-react"
 import { ApprovalRateModal } from "./approval-rate-modal"
@@ -13,6 +13,7 @@ import { useWallet } from "@solana/wallet-adapter-react"
 import axios from "axios"
 import { toast, Toaster } from "sonner"
 import { useRouter } from "next/navigation"
+
 interface QAPair {
   id: number
   question: string
@@ -28,8 +29,6 @@ interface FileUploadState {
   preview: QAPair[] | null
   error: string | null
 }
-
-
 
 export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multiplier, verified }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean, multiplier: number, verified: boolean }) {
   const { connected, publicKey } = useWallet()
@@ -73,6 +72,11 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
   }
 
   // Update rewards whenever Q&A content changes
+  const effectDependencies = useMemo(() => ({
+    qaPairs,
+    calculateReward
+  }), [qaPairs, calculateReward])
+
   useEffect(() => {
     setQaPairs(pairs =>
       pairs.map(pair => ({
@@ -80,7 +84,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
         estimatedReward: calculateReward(pair.question, pair.answer)
       }))
     )
-  }, [qaPairs.map(p => p.question + p.answer).join('')])
+  }, [effectDependencies])
 
   const handleAddPair = () => {
     const lastPair = qaPairs[qaPairs.length - 1]
@@ -155,14 +159,6 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
     }
   }
 
-  // Calculate approval rate multiplier
-  const getApprovalRateMultiplier = (rate: number): number => {
-    if (rate >= 95) return 2.0
-    if (rate >= 85) return 1.5
-    if (rate >= 70) return 1.2
-    return 1.0
-  }
-
   function ValidationStatus({ status, message }: {
     status?: 'pending' | 'processing' | 'accepted' | 'rejected'
     message?: string
@@ -203,7 +199,6 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
   }
 
   const handleSubmit = async () => {
-
     try {
       setIsProcessing(true)
       console.log("verified",verified)
@@ -247,7 +242,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
 
 
     const pairs = [...filterredQaPairs, ...qaPairsinput].reduce((acc, item) => {
-      //@ts-ignore
+      //@ts-expect-error - Add reason for suppressing the error
       if (item !== undefined) acc.push(item);
       return acc;
     }, []);
