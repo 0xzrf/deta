@@ -1,4 +1,6 @@
-rules: {
-  '@typescript-eslint/no-explicit-any': 'warn',
-  '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
+module.exports = {
+  rules: {
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
+  }
 } 
