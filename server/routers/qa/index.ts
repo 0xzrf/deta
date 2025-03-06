@@ -35,7 +35,7 @@ export const qaRouter = createTRPCRouter({
         }
 
         return { success: true, keys };
-      } catch (error) {
+      } catch (_error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Submission failed",
@@ -90,7 +90,7 @@ export const qaRouter = createTRPCRouter({
                 RewardCalculator.calculateQualityMultiplier(qualityRating);
               const approvalMultiplier =
                 RewardCalculator.calculateApprovalMultiplier(approvalRate);
-              const web3Multiplier = 2.5;
+              const _web3Multiplier = 2.5;
 
               const categoryMultiplier = RewardCalculator.calculateCategoryMultiplier(
                 classificationResult.finalCategory
@@ -123,7 +123,7 @@ export const qaRouter = createTRPCRouter({
         }
 
         return { processed };
-      } catch (error) {
+      } catch (_error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Processing failed",
@@ -191,7 +191,7 @@ export const qaRouter = createTRPCRouter({
           })),
           nextCursor: nextToken,
         };
-      } catch (error) {
+      } catch (_error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Fetch failed",

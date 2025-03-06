@@ -1,4 +1,5 @@
 "use client"
+import React from 'react';
 
 import { useState, useEffect } from "react"
 import {  TrendingUp, Users, Database, Award, HelpCircle } from "lucide-react"
@@ -27,11 +28,11 @@ interface MetricCard {
     value: number
     timeframe: string
   }
-  icon: JSX.Element
+  icon: React.ReactNode
   color: string
 }
 
-export function AnalyticsDashboard() {
+export default function AnalyticsDashboard(): React.ReactElement {
   const [activeInfoModal, setActiveInfoModal] = useState<string | null>(null)
   const [metrics, setMetrics] = useState<MetricCard[]>([])
   const [networkStats, setNetworkStats] = useState<any[]>([])

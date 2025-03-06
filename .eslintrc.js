@@ -1,23 +1,27 @@
 module.exports = {
   extends: [
-    'next/core-web-vitals',
-    'eslint:recommended',
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended"
   ],
-  parser: '@typescript-eslint/parser',
+  plugins: ["@typescript-eslint"],
+  parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: 2020,
-    sourceType: 'module',
+    sourceType: "module",
     ecmaFeatures: {
-      jsx: true,
-    },
-  },
-  env: {
-    browser: true,
-    es2020: true,
-    node: true,
+      jsx: true
+    }
   },
   rules: {
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
-  },
-}; 
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": ["warn", { 
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_" 
+    }],
+    "no-undef": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "no-empty": "warn",
+    "no-case-declarations": "warn",
+    "@next/next/no-sync-scripts": "warn"
+  }
+} 

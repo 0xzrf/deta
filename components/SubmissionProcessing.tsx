@@ -1,10 +1,11 @@
 "use client"
+import React from 'react';
 
 interface ProcessingStep {
   id: number
   title: string
   description: string
-  icon: JSX.Element
+  icon: React.ReactNode
   status: 'pending' | 'processing' | 'completed'
 }
 
@@ -18,7 +19,7 @@ interface SubmissionProcessingProps {
   } | null
 }
 
-export function SubmissionProcessing({ steps, currentStep, results }: SubmissionProcessingProps) {
+export default function SubmissionProcessing({ steps, currentStep, results }: SubmissionProcessingProps): React.ReactElement {
   return (
     <div className="space-y-6">
       <div className="space-y-4">

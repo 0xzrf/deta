@@ -138,7 +138,7 @@ export function InfoModal({ title, content, data, onClose }: InfoModalProps) {
                     cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                   />
                   <Legend 
-                    formatter={(value, entry) => (
+                    formatter={(value, _entry) => (
                       <span className="text-gray-400 hover:text-white transition-colors">
                         {value}
                       </span>

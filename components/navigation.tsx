@@ -132,7 +132,7 @@ export function Navigation() {
                 onClick={connectWallet}
                 onMouseEnter={() => {
                   if (connected) {
-
+                    // Intentionally empty
                   }
                 }}
                 className={`

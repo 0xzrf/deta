@@ -149,7 +149,7 @@ export class QAClassifier {
         ? (rawCategory as Category)
         : "General";
       return { decision, qualityRating, category };
-    } catch (e) {
+    } catch (_e) {
       console.error("Failed to parse JSON response:", { raw, cleaned });
       const decisionMatch = raw.match(/"decision"\s*:\s*"(\w+)"/i);
       const decision = decisionMatch?.[1]?.toLowerCase()?.startsWith("approved")

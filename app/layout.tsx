@@ -1,7 +1,9 @@
+import React from 'react';
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Navigation } from "@/components/navigation"
 import AppWalletProvider from "@/components/Solana/AppWalletProvider"
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,8 +22,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
 
-            <script src="https://cdn.botpress.cloud/webchat/v2.2/inject.js"></script>
-            <script src="https://files.bpcontent.cloud/2025/02/08/14/20250208141525-8ZDS7NKA.js"></script>
+            <Script src="https://cdn.botpress.cloud/webchat/v2.2/inject.js" strategy="afterInteractive" />
+            <Script src="https://files.bpcontent.cloud/2025/02/08/14/20250208141525-8ZDS7NKA.js" strategy="afterInteractive" />
         <AppWalletProvider>
 
           <div className="relative min-h-screen bg-background">

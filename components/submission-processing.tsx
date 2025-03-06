@@ -1,4 +1,5 @@
 "use client"
+import React from 'react';
 
 import { useEffect, useState } from "react"
 import { CheckCircle, Loader2, Brain, Filter, Award } from "lucide-react"
@@ -7,7 +8,7 @@ interface ProcessingStep {
   id: number
   title: string
   description: string
-  icon: JSX.Element
+  icon: React.ReactNode
   status: 'pending' | 'processing' | 'completed'
 }
 
@@ -15,7 +16,7 @@ interface SubmissionProcessingProps {
   totalPairs: number
 }
 
-export function SubmissionProcessing({ totalPairs }: SubmissionProcessingProps) {
+export default function SubmissionProcessing({ totalPairs }: SubmissionProcessingProps): React.ReactElement {
   const [currentStep, setCurrentStep] = useState(0)
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([
     {

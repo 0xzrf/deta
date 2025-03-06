@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useMemo } from "react"
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import {
   ChevronDown, Plus, X, Info, Upload,
   Clock, Loader2, CheckCircle, XCircle,
@@ -24,7 +24,7 @@ interface QAPair {
   validationMessage?: string
 }
 
-interface FileUploadState {
+type _FileUploadState = {
   file: File | null
   preview: QAPair[] | null
   error: string | null
@@ -50,7 +50,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
   const [isClaimLoading, setIsClaimLoading] = useState(false)
 
   // Calculate reward based on content length, complexity, and random bonus
-  const calculateReward = (question: string, answer: string): number => {
+  const calculateReward = useCallback((question: string, answer: string): number => {
     if (!question.trim() || !answer.trim()) return 0
 
     const baseReward = 0.2 // Minimum reward
@@ -69,7 +69,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
       (0.7 + (0.3 * lengthMultiplier * complexityMultiplier)) // Quality affects 30% of reward
 
     return Number(reward.toFixed(2))
-  }
+  }, [])
 
   // Update rewards whenever Q&A content changes
   const effectDependencies = useMemo(() => ({

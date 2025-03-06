@@ -10,7 +10,7 @@ import axios from "axios"
 
 
 interface UserData {
-  address: String,
+  address: string,
   total_claimed: number,
   claimable: number
   total_earned: number
@@ -166,7 +166,7 @@ export default function ProfilePage() {
 
     })()
 
-  }, [])
+  }, [wallet?.publicKey])
 
   const tabs = [
     {

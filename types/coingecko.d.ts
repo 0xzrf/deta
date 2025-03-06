@@ -1,5 +1,7 @@
-declare namespace JSX {
-  interface IntrinsicElements {
+import React from 'react';
+
+declare namespace _JSX {
+  interface _IntrinsicElements {
     'coingecko-coin-price-chart-widget': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
       'coin-id': string;
       currency: string;
