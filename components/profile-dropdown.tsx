@@ -76,7 +76,7 @@ export function ProfileDropdown() {
                 className="absolute right-0 mt-2 w-48 rounded-lg bg-black/90 backdrop-blur-lg 
                 border border-white/10 shadow-lg py-1 z-50"
               >
-                {menuItems.map((item, i) => (
+                {menuItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}

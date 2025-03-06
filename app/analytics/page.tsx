@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import { AnalyticsDashboard } from "@/components/analytics-dashboard"
-import { ModelProgress } from "@/components/model-progress"
-import { BarChart3, Activity } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 
 type TabType = 'analytics' | 'progress'
 

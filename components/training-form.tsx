@@ -2,19 +2,17 @@
 
 import { useState, useEffect, useRef } from "react"
 import {
-  ChevronDown, Plus, X, Wallet, Info, Upload,
+  ChevronDown, Plus, X, Info, Upload,
   Clock, Loader2, CheckCircle, XCircle, Brain, Filter, Award,
   ArrowUpRight
 } from "lucide-react"
 import { ApprovalRateModal } from "./approval-rate-modal"
 import { ExampleModal } from "./example-modal"
 import { AnimatePresence, motion } from "framer-motion"
-import { SubmissionProcessing } from "./SubmissionProcessing"
 import { useWallet } from "@solana/wallet-adapter-react"
-import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 import axios from "axios"
 import { toast, Toaster } from "sonner"
-
+import { useRouter } from "next/navigation"
 interface QAPair {
   id: number
   question: string
@@ -31,17 +29,11 @@ interface FileUploadState {
   error: string | null
 }
 
-interface ProcessingStep {
-  id: number
-  title: string
-  description: string
-  icon: JSX.Element
-  status: 'pending' | 'processing' | 'completed'
-}
 
-export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus_claimed, multiplier }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean, multiplier: number }) {
+
+export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multiplier, verified }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean, multiplier: number, verified: boolean }) {
   const { connected, publicKey } = useWallet()
-
+  const router = useRouter()
   const [qaPairs, setQaPairs] = useState<QAPair[]>([{
     id: 1,
     question: "",
@@ -50,47 +42,13 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
     estimatedReward: 0
   }])
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [fileUpload, setFileUpload] = useState<FileUploadState>({
-    file: null,
-    preview: null,
-    error: null
-  })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [submissionResults, setSubmissionResults] = useState<{
-    acceptedPairs: number
-    totalReward: number
-    qualityScore: number
-  } | null>(null)
-  const [currentStep] = useState(0)
-  const [processingSteps] = useState<ProcessingStep[]>([
-    {
-      id: 1,
-      title: "Initializing AI Filter",
-      description: "Preparing to analyze submissions",
-      icon: <Brain className="h-6 w-6" />,
-      status: 'pending'
-    },
-    {
-      id: 2,
-      title: "Quality Analysis",
-      description: "Analyzing submissions",
-      icon: <Filter className="h-6 w-6" />,
-      status: 'pending'
-    },
-    {
-      id: 3,
-      title: "Calculating Rewards",
-      description: "Determining final rewards based on quality",
-      icon: <Award className="h-6 w-6" />,
-      status: 'pending'
-    }
-  ])
   const [showUnlockInfo, setShowUnlockInfo] = useState(false)
   const [showLatestSessions, setShowLatestSessions] = useState(false)
   const [showExampleModal, setShowExampleModal] = useState<'question' | 'answer' | null>(null)
-  const [totalEstimatedReward, setTotalEstimatedReward] = useState(0)
   const [fileUploaded, setFileUploaded] = useState(false)
+  const [isClaimLoading, setIsClaimLoading] = useState(false)
 
   // Calculate reward based on content length, complexity, and random bonus
   const calculateReward = (question: string, answer: string): number => {
@@ -123,15 +81,6 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
       }))
     )
   }, [qaPairs.map(p => p.question + p.answer).join('')])
-
-  useEffect(() => {
-    const calculateTotal = () => {
-      const total = qaPairs.reduce((sum, pair) => sum + (pair.estimatedReward || 0), 0)
-      setTotalEstimatedReward(total)
-    }
-    calculateTotal()
-  }, [qaPairs])
-
 
   const handleAddPair = () => {
     const lastPair = qaPairs[qaPairs.length - 1]
@@ -186,7 +135,24 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
       alert("Please connect your wallet to claim rewards")
       return
     }
-    // Implement your reward claiming logic here
+
+    setIsClaimLoading(true)
+    try {
+      await axios.get("https://deta-server-silk.vercel.app/")
+      const response = await axios.post(`https://deta-server-silk.vercel.app/api/distribute`, {
+        contributorKey: publicKey?.toString()
+      })
+
+      if (response.data.success) {
+        toast.success("Rewards claimed successfully")
+      } else {
+        toast.error("Error claiming rewards")
+      }
+    } catch (error) {
+      toast.error("Error claiming rewards")
+    } finally {
+      setIsClaimLoading(false)
+    }
   }
 
   // Calculate approval rate multiplier
@@ -238,14 +204,37 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
 
   const handleSubmit = async () => {
 
-    const checkRequest = await axios.get("http://localhost:3001/api/waitlist/stats")
+    try {
+      setIsProcessing(true)
+      console.log("verified",verified)
 
-    const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
+      const checkRequest = await axios.get("http://localhost:3002/api/waitlist/stats")
 
-    if (!match) {
-      toast.error("You are not in the waitlist")
+  
+      const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
+
+      if (!match) {
+
+        if (!verified) {
+          toast.error("You are not in the waitlist, redirecting to sign in")
+  
+        setTimeout(async () => {
+            router.push('/signin')
+          }, 5000)
+
+          return
+        }
+      } 
+      
+    } catch (error) {
+      toast.error("Error checking waitlist")
+      setTimeout(async () => {
+        router.push('/signin')
+      }, 5000)
+      console.log(error)
       return
     }
+
 
     const filterredQaPairs = qaPairs.map(data => {
       if (data.answer == '' || data.question == '') return
@@ -337,13 +326,6 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
         {/* Main Training Form - Takes up 3 columns */}
         <div className="lg:col-span-3 glass-card p-6">
           <h2 className="text-xl font-medium text-[#00FF95] mb-6">Submit Training Data</h2>
-          {isProcessing ? (
-            <SubmissionProcessing
-              steps={processingSteps}
-              currentStep={currentStep}
-              results={submissionResults}
-            />
-          ) : (
             <>
               {/* File Upload Section */}
               <div className="mb-6">
@@ -534,7 +516,6 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
                 </button>
               </div>
             </>
-          )}
         </div>
 
         {/* Rewards Panel - Takes up 1 column */}
@@ -688,10 +669,16 @@ export function TrainingForm({ earned, claimed, claimable, totalClaimable, bonus
                 bg-[#00FF95] text-black hover:bg-[#00FF95]/90
                 transition-all duration-300 flex items-center justify-center gap-2
                 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!connected || claimable == 0}
+              disabled={!connected || isClaimLoading}
             >
-              Claim ${claimable} $DeTA
-
+              {isClaimLoading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Claiming...
+                </>
+              ) : (
+                `Claim ${claimable} $DeTA`
+              )}
             </button>
 
           </div>

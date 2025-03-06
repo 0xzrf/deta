@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Info, TrendingUp, Users, Database, Award, HelpCircle } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import {  TrendingUp, Users, Database, Award, HelpCircle } from "lucide-react"
+import {  AnimatePresence } from "framer-motion"
 import { InfoModal } from "./info-modal"
 import axios from "axios"
 

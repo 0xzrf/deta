@@ -1,8 +1,6 @@
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Navigation } from "@/components/navigation"
-import { useWallet } from "@solana/wallet-adapter-react"
-import { SupportWidget } from "@/components/SupportWidget"
 import AppWalletProvider from "@/components/Solana/AppWalletProvider"
 
 const inter = Inter({ subsets: ["latin"] })

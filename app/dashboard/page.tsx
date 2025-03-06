@@ -19,6 +19,7 @@ interface UserData {
   tokens: number
   multiplier: string  
   bonus_claimed: boolean
+  verified: boolean
 }
 
 interface Submission {
@@ -43,7 +44,7 @@ interface userSubmission {
 }
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState<"contribute" | "performance" | "chat">('contribute')
+  const [activeTab] = useState<"contribute" | "performance" | "chat">('contribute')
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -104,7 +105,7 @@ export default function ProfilePage() {
 
       const approval_rate = (approved / submissions) * 100;
 
-      let multiplier = (1 + (((approval_rate - 50) / 50) ** 2 ) * 0.5).toString()
+      const multiplier = (1 + (((approval_rate - 50) / 50) ** 2 ) * 0.5).toString()
 
       const data: UserData = {
         address: response1.data.address,
@@ -115,7 +116,8 @@ export default function ProfilePage() {
         total_earned: tokens,
         tokens,
         multiplier,
-        bonus_claimed: response1.data.user.bonus_claimed
+        bonus_claimed: response1.data.user.bonus_claimed,
+        verified: response1.data.user.verified
       }
 
       setUserData (data)
@@ -150,7 +152,7 @@ export default function ProfilePage() {
         return returnData
       })
 
-      const sortedArr = submissions.sort((a: any, b: any) => a.timestamp - b.timestamp)
+      const sortedArr = submissions.sort((a: {timestamp: any}, b: {timestamp: any}) => a.timestamp - b.timestamp)
 
       const filteredArr = sortedArr.filter((sub: any) => {
         return sub.user === wallet?.publicKey?.toString()
@@ -357,6 +359,7 @@ export default function ProfilePage() {
                 totalClaimable={0}
                 bonus_claimed={userData?.bonus_claimed || false}
                 multiplier={parseFloat(userData?.multiplier || "0")}
+                verified={userData?.verified || false}
               />
             </div>
           )}

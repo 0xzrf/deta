@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import {NextResponse } from "next/server";
 import {prisma} from "@/lib/utils"
 
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
 
     const globalFeed = await prisma.global.findMany()
 
