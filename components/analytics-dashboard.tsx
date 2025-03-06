@@ -61,7 +61,7 @@ export function AnalyticsDashboard() {
               description: "Growth in total submissions across different network versions"
             },
             trend: {
-              value: ((data.total_submissions / 1000) * 100).toFixed(1),
+              value: ((data.total_submissions / 1000) * 100).toFixed(1) as unknown as number,
               timeframe: "vs last version"
             },
             icon: <Database className="h-5 w-5" />,
