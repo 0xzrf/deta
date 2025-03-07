@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AnalyticsDashboard } from "@/components/analytics-dashboard"
+import AnalyticsDashboard from "@/components/analytics-dashboard"
 import { BarChart3 } from "lucide-react"
 
 type TabType = 'analytics' | 'progress'
