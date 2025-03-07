@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { TrainingForm } from "@/components/training-form"
 import { MessageSquareText, TrendingUp, ChevronDown, CheckCircle, Clock } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -45,7 +45,15 @@ interface userSubmission {
 
 export default function ProfilePage() {
   const [activeTab] = useState<"contribute" | "performance" | "chat">('contribute')
+  
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProfileContent />
+    </Suspense>
+  )
+}
 
+function ProfileContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false)
@@ -238,7 +246,6 @@ export default function ProfilePage() {
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={activeTab}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
