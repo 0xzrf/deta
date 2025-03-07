@@ -43,6 +43,7 @@ interface userSubmission {
   category: "Development" | "DeFi" | "NFT" | "General" | null
 }
 
+
 export default function ProfilePage() {
   const [activeTab] = useState<"contribute" | "performance" | "chat">('contribute')
   
