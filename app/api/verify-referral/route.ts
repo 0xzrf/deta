@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     }
 
 
-    
+
     // Check if referral code exists and is unused
     const referral = await prisma.waitlist.findUnique({
       where: {
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       }),
       // Mark referral code as used
       prisma.waitlist.update({
-        where: { referral_code: referral.referral_code },
+        where: { referral_code: referral?.referral_code as string },
         data: { used: true },
       }),
     ]);
