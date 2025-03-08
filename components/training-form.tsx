@@ -71,20 +71,6 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
     return Number(reward.toFixed(2))
   }, [])
 
-  // Update rewards whenever Q&A content changes
-  const effectDependencies = useMemo(() => ({
-    qaPairs,
-    calculateReward
-  }), [qaPairs, calculateReward])
-
-  useEffect(() => {
-    setQaPairs(pairs =>
-      pairs.map(pair => ({
-        ...pair,
-        estimatedReward: calculateReward(pair.question, pair.answer)
-      }))
-    )
-  }, [effectDependencies])
 
   const handleAddPair = () => {
     const lastPair = qaPairs[qaPairs.length - 1]
@@ -139,20 +125,31 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
       alert("Please connect your wallet to claim rewards")
       return
     }
-
+    
     setIsClaimLoading(true)
     try {
-      await axios.get("https://deta-server-silk.vercel.app/")
-      const response = await axios.post(`https://deta-server-silk.vercel.app/api/distribute`, {
-        contributorKey: publicKey?.toString()
-      })
+      const checkRequest = await axios.get("https://www.detaprotocol.com/api/waitlist/stats")
 
-      if (response.data.success) {
-        toast.success("Rewards claimed successfully")
+      const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
+
+      if (match || verified) {
+        const response = await axios.post(`https://deta-server-silk.vercel.app/api/distribute`, {
+          contributorKey: publicKey?.toString()
+        })
+  
+        if (response.data.success) {
+          toast.success("Rewards claimed successfully")
+        } else {
+          toast.error("Error claiming rewards")
+        }
       } else {
-        toast.error("Error claiming rewards")
+        toast.error("You are not in the waitlist, redirecting to sign in")
+        setTimeout(async () => {
+          router.push('/signin')
+        }, 5000)
       }
     } catch (error) {
+
       toast.error("Error claiming rewards")
     } finally {
       setIsClaimLoading(false)
@@ -203,8 +200,10 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
       setIsProcessing(true)
       console.log("verified",verified)
 
-      const checkRequest = await axios.get("http://localhost:3002/api/waitlist/stats")
+      console.log("I'm here")
+      const checkRequest = await axios.get("https://www.detaprotocol.com/api/waitlist/stats")
 
+      
   
       const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
 

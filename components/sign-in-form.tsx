@@ -4,6 +4,7 @@ import React from 'react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { toast, Toaster } from "sonner"
 import {
   Card,
   CardContent,
@@ -13,26 +14,43 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useWallet } from '@solana/wallet-adapter-react'
 
 export default function SignInForm() {
   const [referralCode, setReferralCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
+  const { publicKey } = useWallet()
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      // Here you would typically validate the referral code with your backend
-      // For now, we'll just simulate a delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      
-      // Redirect to dashboard or handle the sign-in logic
-      router.push('/dashboard')
+      const response = await fetch('/api/verify-referral', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ referralCode, walletAddress: publicKey?.toBase58() }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+          toast.success("Referral code verified successfully.")
+        
+        // Wait 5 seconds before redirecting
+        setTimeout(() => {
+          router.push('/dashboard?tab=contribute')
+        }, 5000)
+      } else {
+        toast.error("Invalid referral code")
+        setIsLoading(false)
+      }
     } catch (error) {
       console.error('Sign in failed:', error)
-    } finally {
+      toast.error("Something went wrong. Please try again.")
       setIsLoading(false)
     }
   }
@@ -71,6 +89,7 @@ export default function SignInForm() {
           </Button>
         </form>
       </CardContent>
+      <Toaster />
     </Card>
   )
 } 

@@ -19,6 +19,7 @@ model User {
   claimable     Int    @default(0)
   total_earned  Int    @default(0)
   bonus_claimed Boolean @default(false)
+  verified      Boolean @default(false)
 }
 
 model Global {
@@ -30,4 +31,10 @@ model Global {
   approval_rate        Int @default(0)
   training_progress    Int @default(0)
   average_response_time Int @default(0)
+}
+
+
+model Waitlist {
+  referral_code String @id @unique
+  used Boolean @default(false)
 }
