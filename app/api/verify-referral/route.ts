@@ -9,6 +9,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false });
     }
 
+
+    
     // Check if referral code exists and is unused
     const referral = await prisma.waitlist.findUnique({
       where: {
