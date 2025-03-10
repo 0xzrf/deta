@@ -10,13 +10,13 @@ import { useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 
 export function Navigation() {
-  const { connected, publicKey, disconnect, connect } = useWallet()
+  const { connected, publicKey, disconnect } = useWallet()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
 
   const isDashboard = pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname.startsWith('/analytics')
-  const { setVisible,visible } = useWalletModal()
+  const { setVisible } = useWalletModal()
 
   const connectWallet = () => { 
     if (connected) {

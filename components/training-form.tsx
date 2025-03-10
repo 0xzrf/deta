@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
+import React, { useState, useRef } from "react"
 import {
   ChevronDown, Plus, X, Info, Upload,
   Clock, Loader2, CheckCircle, XCircle,
@@ -48,29 +48,6 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
   const [showExampleModal, setShowExampleModal] = useState<'question' | 'answer' | null>(null)
   const [fileUploaded, setFileUploaded] = useState(false)
   const [isClaimLoading, setIsClaimLoading] = useState(false)
-
-  // Calculate reward based on content length, complexity, and random bonus
-  const calculateReward = useCallback((question: string, answer: string): number => {
-    if (!question.trim() || !answer.trim()) return 0
-
-    const baseReward = 0.2 // Minimum reward
-    const maxRandomBonus = 1.8 // Maximum additional reward
-    const randomBonus = Math.random() * maxRandomBonus // Random bonus between 0 and 1.8
-
-    // Length and complexity multipliers
-    const lengthMultiplier = Math.min((question.length + answer.length) / 200, 1)
-    const complexityMultiplier = Math.min(
-      (question.split(' ').length + answer.split(' ').length) / 20,
-      1
-    )
-
-    // Final reward calculation: base + random bonus, adjusted by quality multipliers
-    const reward = (baseReward + randomBonus) *
-      (0.7 + (0.3 * lengthMultiplier * complexityMultiplier)) // Quality affects 30% of reward
-
-    return Number(reward.toFixed(2))
-  }, [])
-
 
   const handleAddPair = () => {
     const lastPair = qaPairs[qaPairs.length - 1]

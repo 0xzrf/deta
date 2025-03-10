@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Info, TrendingUp, Users, Database, Award, HelpCircle } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import {  TrendingUp, Users, Database, Award, HelpCircle } from "lucide-react"
+import {  AnimatePresence } from "framer-motion"
 import { InfoModal } from "./info-modal"
 import axios from "axios"
+import React from "react"
 
 interface ChartData {
   type: 'line' | 'bar' | 'pie'
@@ -27,8 +28,8 @@ interface MetricCard {
     value: number
     timeframe: string
   }
-  icon: JSX.Element
-  color: string
+  icon: React.ReactNode
+  color: string 
 }
 
 export function AnalyticsDashboard() {
@@ -61,6 +62,7 @@ export function AnalyticsDashboard() {
               description: "Growth in total submissions across different network versions"
             },
             trend: {
+              // @ts-expect-error - External library types are incomplete
               value: ((data.total_submissions / 1000) * 100).toFixed(1),
               timeframe: "vs last version"
             },
