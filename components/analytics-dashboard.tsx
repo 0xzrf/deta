@@ -1,9 +1,8 @@
 "use client"
-import React from 'react';
 
 import { useState, useEffect } from "react"
-import {  TrendingUp, Users, Database, Award, HelpCircle } from "lucide-react"
-import {  AnimatePresence } from "framer-motion"
+import { Info, TrendingUp, Users, Database, Award, HelpCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { InfoModal } from "./info-modal"
 import axios from "axios"
 
@@ -28,11 +27,11 @@ interface MetricCard {
     value: number
     timeframe: string
   }
-  icon: React.ReactNode
+  icon: JSX.Element
   color: string
 }
 
-export default function AnalyticsDashboard(): React.ReactElement {
+export function AnalyticsDashboard() {
   const [activeInfoModal, setActiveInfoModal] = useState<string | null>(null)
   const [metrics, setMetrics] = useState<MetricCard[]>([])
   const [networkStats, setNetworkStats] = useState<any[]>([])
@@ -62,7 +61,7 @@ export default function AnalyticsDashboard(): React.ReactElement {
               description: "Growth in total submissions across different network versions"
             },
             trend: {
-              value: ((data.total_submissions / 1000) * 100).toFixed(1) as unknown as number,
+              value: ((data.total_submissions / 1000) * 100).toFixed(1),
               timeframe: "vs last version"
             },
             icon: <Database className="h-5 w-5" />,
@@ -287,7 +286,7 @@ export default function AnalyticsDashboard(): React.ReactElement {
       </div>
 
       {/* Info Modal */}
-      <AnimatePresence>
+      <AnimatePresence> 
         {activeInfoModal && (
           <InfoModal
             title={activeInfoModal}

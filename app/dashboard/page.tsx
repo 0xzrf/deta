@@ -366,7 +366,7 @@ function ProfileContent() {
                 claimable={userData?.claimable || 0}
                 totalClaimable={0}
                 bonus_claimed={userData?.bonus_claimed || false}
-                multiplier={parseFloat(userData?.multiplier || "0")}
+                multiplier={parseFloat(userData?.multiplier || "1")}
                 verified={userData?.verified || false}
               />
             </div>

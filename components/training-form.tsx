@@ -125,7 +125,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
       alert("Please connect your wallet to claim rewards")
       return
     }
-    
+
     setIsClaimLoading(true)
     try {
       const checkRequest = await axios.get("https://www.detaprotocol.com/api/waitlist/stats")
@@ -136,7 +136,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
         const response = await axios.post(`https://deta-server-silk.vercel.app/api/distribute`, {
           contributorKey: publicKey?.toString()
         })
-  
+
         if (response.data.success) {
           toast.success("Rewards claimed successfully")
         } else {
@@ -198,28 +198,54 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
   const handleSubmit = async () => {
     try {
       setIsProcessing(true)
-      console.log("verified",verified)
+      console.log("verified", verified)
 
       console.log("I'm here")
       const checkRequest = await axios.get("https://www.detaprotocol.com/api/waitlist/stats")
 
-      
-  
+
+
       const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
 
-      if (!match) {
+      if (match || verified) {
 
-        if (!verified) {
-          toast.error("You are not in the waitlist, redirecting to sign in")
-  
-        setTimeout(async () => {
-            router.push('/signin')
-          }, 5000)
+        const filterredQaPairs = qaPairs.map(data => {
+          if (data.answer == '' || data.question == '') return
+          return {
+            question: data.question,
+            answer: data.answer
+          }
+        })
 
-          return
+        const pairs = [...filterredQaPairs, ...qaPairsinput].reduce((acc, item) => {
+          //@ts-expect-error - Add reason for suppressing the error
+          if (item !== undefined) acc.push(item);
+          return acc;
+        }, []);
+
+        console.log(pairs)
+
+        const payload = {
+          json: {
+            walletAddress: publicKey?.toString(),
+            pairs
+          }
         }
-      } 
-      
+
+        const response = await axios.post("/api/trpc/qa.submit", payload)
+
+        if (response.data.result.data.json.success) {
+          toast.success("Successfully submitted the qa pair.")
+        }
+
+        setIsProcessing(false)
+      } else {
+        toast.error("You are not in the waitlist, redirecting to sign in")
+        setTimeout(async () => {
+          router.push('/signin')
+        }, 5000)
+      }
+
     } catch (error) {
       toast.error("Error checking waitlist")
       setTimeout(async () => {
@@ -230,38 +256,6 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
     }
 
 
-    const filterredQaPairs = qaPairs.map(data => {
-      if (data.answer == '' || data.question == '') return
-      return {
-        question: data.question,
-        answer: data.answer
-      }
-
-    })
-
-
-    const pairs = [...filterredQaPairs, ...qaPairsinput].reduce((acc, item) => {
-      //@ts-expect-error - Add reason for suppressing the error
-      if (item !== undefined) acc.push(item);
-      return acc;
-    }, []);
-
-    console.log(pairs)
-
-    const payload = {
-      json: {
-        walletAddress: publicKey?.toString(),
-        pairs
-      }
-    }
-
-    const response = await axios.post("/api/trpc/qa.submit", payload)
-
-    if (response.data.result.data.json.success) {
-      toast.success("Successfully submitted the qa pair.")
-    }
-
-    setIsProcessing(false)
 
   }
 
@@ -320,196 +314,196 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
         {/* Main Training Form - Takes up 3 columns */}
         <div className="lg:col-span-3 glass-card p-6">
           <h2 className="text-xl font-medium text-[#00FF95] mb-6">Submit Training Data</h2>
-            <>
-              {/* File Upload Section */}
-              <div className="mb-6">
-                <div className="rounded-lg border-2 border-dashed border-white/10 p-6 text-center hover:border-white/20 transition-colors">
-                  <input
-                    type="file"
-                    onChange={handleFileSubmit}
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept=".json,.csv,.txt"
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-col items-center gap-2 w-full"
-                  >
-                    {fileSubmitting ? (
-                      <div className="flex flex-col items-center gap-2 w-full animate-pulse">
-                        <div className="h-8 w-8 bg-gray-300 rounded-full"></div>
-                        <div className="h-4 w-40 bg-gray-300 rounded"></div>
-                        <div className="h-3 w-32 bg-gray-300 rounded"></div>
-                      </div>
-                    ) : (
-                      <>
-                        <Upload className="h-8 w-8 text-gray-400" />
-                        <p className="text-sm text-gray-400">Upload a file or click to browse</p>
-                        <p className="text-xs text-gray-500">Supports JSON & CSV</p>
-                      </>
-                    )}
-                  </button>
-
-                </div>
-              </div>
-
-              {/* Q&A Input Section */}
-              <div className="space-y-4">
-
-                {/* Add this compact summary section */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-black/20">
-                  <div className="flex items-center gap-4">
-                    <div className="text-sm text-gray-400">
-                      Total Pairs: <span className="text-white font-medium">{(qaPairs.length - 1) + qaPairsinput.length}</span>
-                    </div>
-                    <div className="w-px h-4 bg-white/10"></div>
-                    <div className="text-sm text-gray-400">
-                      Estimated: <span className="text-gradient font-medium">{qaPairsinput.length * 500 * multiplier} $DeTA</span>
-                    </div>
-                  </div>
-                  {
-                    !fileUploaded && (
-                      <button
-                        onClick={handleAddPair}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-full
-                      bg-[#00FF95]/10 hover:bg-[#00FF95]/20 text-[#00FF95] text-sm
-                      transition-all duration-300"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        Add Pair
-                      </button>
-                    )
-                  }
-                </div>
-
-                {qaPairs.map((pair) => (
-                  <div
-                    key={pair.id}
-                    className="rounded-lg border border-white/10 bg-black/20 p-3" // Reduced padding
-                  >
-                    {pair.isCollapsed ? (
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-white truncate">
-                            Q: {pair.question}
-                          </p>
-                          <p className="text-sm text-gray-400 truncate">
-                            A: {pair.answer}
-                          </p>
-                          {pair.validationStatus && (
-                            <div className="mt-2">
-                              <ValidationStatus
-                                status={pair.validationStatus}
-                                message={pair.validationMessage}
-                              />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gradient">
-                            {pair.estimatedReward?.toFixed(1)} $DeTA
-                          </span>
-                          <button
-                            onClick={() => toggleCollapse(pair.id)}
-                            className="p-1 text-gray-400 hover:text-white"
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                          </button>
-                          {!isProcessing && (
-                            <button
-                              onClick={() => removePair(pair.id)}
-                              className="p-1 text-gray-400 hover:text-red-500"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {
-                          !fileUploaded &&
-                          <>
-
-                            <div className="flex items-center gap-2">
-                              <label className="text-sm font-medium text-gray-300">
-                                Question
-                              </label>
-                              <button
-                                onClick={() => setShowExampleModal('question')}
-                                className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
-                              >
-                                example
-                              </button>
-                            </div>
-                            <textarea
-                              value={pair.question}
-                              onChange={(e) => handleChange(pair.id, 'question', e.target.value)}
-                              onKeyPress={(e) => handleKeyPress(e, pair.id)}
-                              className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
-                              placeholder="Enter your question..."
-                              rows={2}
-                            />
-                            <div className="flex items-center gap-2">
-                              <label className="text-sm font-medium text-gray-300">
-                                Answer
-                              </label>
-                              <button
-                                onClick={() => setShowExampleModal('answer')}
-                                className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
-                              >
-                                example
-                              </button>
-                            </div>
-                            <textarea
-                              value={pair.answer}
-                              onChange={(e) => handleChange(pair.id, 'answer', e.target.value)}
-                              onKeyPress={(e) => handleKeyPress(e, pair.id)}
-                              className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
-                              placeholder="Enter your answer..."
-                              rows={3}
-                            />
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gradient">
-                                Estimated: {pair.estimatedReward?.toFixed(1)} $DeTA
-                              </span>
-                              <button
-                                onClick={() => toggleCollapse(pair.id)}
-                                className="rounded-md px-3 py-1 text-sm text-gray-400 hover:text-white"
-                              >
-                                Collapse
-                              </button>
-                            </div>
-                          </>
-                        }
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Add this Submit Button section */}
-              <div className="mt-8">
+          <>
+            {/* File Upload Section */}
+            <div className="mb-6">
+              <div className="rounded-lg border-2 border-dashed border-white/10 p-6 text-center hover:border-white/20 transition-colors">
+                <input
+                  type="file"
+                  onChange={handleFileSubmit}
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept=".json,.csv,.txt"
+                />
                 <button
-                  onClick={handleSubmit}
-                  className="w-full px-6 py-3 rounded-full bg-[#00FF95] text-black
-                    font-medium text-lg hover:bg-[#00FF95]/90 transition-colors
-                    disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isProcessing || (qaPairs.length - 1) + qaPairsinput.length === 0}
-                  aria-busy={isProcessing}
-                  aria-disabled={isProcessing || qaPairs.length === 0}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex flex-col items-center gap-2 w-full"
                 >
-                  {isProcessing ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      Processing...
+                  {fileSubmitting ? (
+                    <div className="flex flex-col items-center gap-2 w-full animate-pulse">
+                      <div className="h-8 w-8 bg-gray-300 rounded-full"></div>
+                      <div className="h-4 w-40 bg-gray-300 rounded"></div>
+                      <div className="h-3 w-32 bg-gray-300 rounded"></div>
                     </div>
                   ) : (
-                    `Submit ${(qaPairs.length - 1) + qaPairsinput.length}  Pair${qaPairs.length !== 1 ? 's' : ''}`
+                    <>
+                      <Upload className="h-8 w-8 text-gray-400" />
+                      <p className="text-sm text-gray-400">Upload a file or click to browse</p>
+                      <p className="text-xs text-gray-500">Supports JSON & CSV</p>
+                    </>
                   )}
                 </button>
+
               </div>
-            </>
+            </div>
+
+            {/* Q&A Input Section */}
+            <div className="space-y-4">
+
+              {/* Add this compact summary section */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-black/20">
+                <div className="flex items-center gap-4">
+                  <div className="text-sm text-gray-400">
+                    Total Pairs: <span className="text-white font-medium">{(qaPairs.length - 1) + qaPairsinput.length}</span>
+                  </div>
+                  <div className="w-px h-4 bg-white/10"></div>
+                  <div className="text-sm text-gray-400">
+                    Estimated: <span className="text-gradient font-medium">{(qaPairsinput.length + qaPairs.length - 1 ) * 500 * multiplier} $DeTA</span>
+                  </div>
+                </div>
+                {
+                  !fileUploaded && (
+                    <button
+                      onClick={handleAddPair}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full
+                      bg-[#00FF95]/10 hover:bg-[#00FF95]/20 text-[#00FF95] text-sm
+                      transition-all duration-300"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Add Pair
+                    </button>
+                  )
+                }
+              </div>
+
+              {qaPairs.map((pair) => (
+                <div
+                  key={pair.id}
+                  className="rounded-lg border border-white/10 bg-black/20 p-3" // Reduced padding
+                >
+                  {pair.isCollapsed ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-white truncate">
+                          Q: {pair.question}
+                        </p>
+                        <p className="text-sm text-gray-400 truncate">
+                          A: {pair.answer}
+                        </p>
+                        {pair.validationStatus && (
+                          <div className="mt-2">
+                            <ValidationStatus
+                              status={pair.validationStatus}
+                              message={pair.validationMessage}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gradient">
+                          {pair.estimatedReward?.toFixed(1)} $DeTA
+                        </span>
+                        <button
+                          onClick={() => toggleCollapse(pair.id)}
+                          className="p-1 text-gray-400 hover:text-white"
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </button>
+                        {!isProcessing && (
+                          <button
+                            onClick={() => removePair(pair.id)}
+                            className="p-1 text-gray-400 hover:text-red-500"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {
+                        !fileUploaded &&
+                        <>
+
+                          <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-300">
+                              Question
+                            </label>
+                            <button
+                              onClick={() => setShowExampleModal('question')}
+                              className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
+                            >
+                              example
+                            </button>
+                          </div>
+                          <textarea
+                            value={pair.question}
+                            onChange={(e) => handleChange(pair.id, 'question', e.target.value)}
+                            onKeyPress={(e) => handleKeyPress(e, pair.id)}
+                            className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
+                            placeholder="Enter your question..."
+                            rows={2}
+                          />
+                          <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-300">
+                              Answer
+                            </label>
+                            <button
+                              onClick={() => setShowExampleModal('answer')}
+                              className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
+                            >
+                              example
+                            </button>
+                          </div>
+                          <textarea
+                            value={pair.answer}
+                            onChange={(e) => handleChange(pair.id, 'answer', e.target.value)}
+                            onKeyPress={(e) => handleKeyPress(e, pair.id)}
+                            className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
+                            placeholder="Enter your answer..."
+                            rows={3}
+                          />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gradient">
+                              Estimatedddd: {pair.estimatedReward?.toFixed(1)} $DeTA
+                            </span>
+                            <button
+                              onClick={() => toggleCollapse(pair.id)}
+                              className="rounded-md px-3 py-1 text-sm text-gray-400 hover:text-white"
+                            >
+                              Collapse
+                            </button>
+                          </div>
+                        </>
+                      }
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Add this Submit Button section */}
+            <div className="mt-8">
+              <button
+                onClick={handleSubmit}
+                className="w-full px-6 py-3 rounded-full bg-[#00FF95] text-black
+                    font-medium text-lg hover:bg-[#00FF95]/90 transition-colors
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isProcessing || (qaPairs.length - 1) + qaPairsinput.length === 0}
+                aria-busy={isProcessing}
+                aria-disabled={isProcessing || qaPairs.length === 0}
+              >
+                {isProcessing ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Processing...
+                  </div>
+                ) : (
+                  `Submit ${(qaPairs.length - 1) + qaPairsinput.length}  Pair${qaPairs.length !== 1 ? 's' : ''}`
+                )}
+              </button>
+            </div>
+          </>
         </div>
 
         {/* Rewards Panel - Takes up 1 column */}
