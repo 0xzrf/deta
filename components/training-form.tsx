@@ -13,6 +13,13 @@ import { useWallet } from "@solana/wallet-adapter-react"
 import axios from "axios"
 import { toast, Toaster } from "sonner"
 import { useRouter } from "next/navigation"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface QAPair {
   id: number
@@ -48,6 +55,11 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
   const [showExampleModal, setShowExampleModal] = useState<'question' | 'answer' | null>(null)
   const [fileUploaded, setFileUploaded] = useState(false)
   const [isClaimLoading, setIsClaimLoading] = useState(false)
+  const [qaCount, setQaCount] = useState({
+    question: 0,
+    answer: 0
+  })
+  const [showLengthModal, setShowLengthModal] = useState(false)
 
   const handleAddPair = () => {
     const lastPair = qaPairs[qaPairs.length - 1]
@@ -180,8 +192,6 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
       console.log("I'm here")
       const checkRequest = await axios.get("https://www.detaprotocol.com/api/waitlist/stats")
 
-
-
       const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
 
       if (match || verified) {
@@ -200,7 +210,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
           return acc;
         }, []);
 
-        console.log(pairs)
+        console.log("Pairs;:::", pairs)
 
         const payload = {
           json: {
@@ -224,11 +234,8 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
       }
 
     } catch (error) {
-      toast.error("Error checking waitlist")
-      setTimeout(async () => {
-        router.push('/signin')
-      }, 5000)
-      console.log(error)
+      toast.error(`Error submitting the qa pair. ${error}`)
+      setIsProcessing(false)
       return
     }
 
@@ -283,6 +290,14 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
 
     setFileSubmitting(false)
     setFileUploaded(true)
+  }
+
+  const handleAddPairClick = () => {
+    if (qaCount.question <= 10 || qaCount.answer <= 10) {
+      setShowLengthModal(true)
+    } else {
+      handleAddPair()
+    }
   }
 
   return (
@@ -340,15 +355,28 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                 </div>
                 {
                   !fileUploaded && (
-                    <button
-                      onClick={handleAddPair}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full
-                      bg-[#00FF95]/10 hover:bg-[#00FF95]/20 text-[#00FF95] text-sm
-                      transition-all duration-300"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Add Pair
-                    </button>
+                    <>
+                      <button
+                        onClick={handleAddPairClick}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full
+                        bg-[#00FF95]/10 hover:bg-[#00FF95]/20 text-[#00FF95] text-sm
+                        transition-all duration-300"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Add Pair
+                      </button>
+
+                      <Dialog open={showLengthModal} onOpenChange={setShowLengthModal}>
+                        <DialogContent className="bg-black/90 border border-white/10">
+                          <DialogHeader>
+                            <DialogTitle className="text-[#00FF95]">Minimum Length Required</DialogTitle>
+                            <DialogDescription className="text-gray-400">
+                              Both the question and answer must be at least 10 characters long.
+                            </DialogDescription>
+                          </DialogHeader>
+                        </DialogContent>
+                      </Dialog>
+                    </>
                   )
                 }
               </div>
@@ -378,7 +406,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gradient">
-                          {pair.estimatedReward?.toFixed(1)} $DeTA
+                          {pair.question.length + pair.answer.length * multiplier * 10} $DeTA
                         </span>
                         <button
                           onClick={() => toggleCollapse(pair.id)}
@@ -415,7 +443,10 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                           </div>
                           <textarea
                             value={pair.question}
-                            onChange={(e) => handleChange(pair.id, 'question', e.target.value)}
+                            onChange={(e) => {
+                              handleChange(pair.id, 'question', e.target.value)
+                              setQaCount(prev => ({ ...prev, question: e.target.value.length }))
+                            }}
                             onKeyPress={(e) => handleKeyPress(e, pair.id)}
                             className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
                             placeholder="Enter your question..."
@@ -430,11 +461,14 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                               className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
                             >
                               example
-                            </button>
+                            </button> 
                           </div>
                           <textarea
                             value={pair.answer}
-                            onChange={(e) => handleChange(pair.id, 'answer', e.target.value)}
+                            onChange={(e) => {
+                              handleChange(pair.id, 'answer', e.target.value)
+                              setQaCount(prev => ({ ...prev, answer: e.target.value.length }))
+                            }}
                             onKeyPress={(e) => handleKeyPress(e, pair.id)}
                             className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
                             placeholder="Enter your answer..."
@@ -442,7 +476,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                           />
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gradient">
-                              Estimatedddd: {pair.estimatedReward?.toFixed(1)} $DeTA
+                              Estimated: {qaCount.question + qaCount.answer * multiplier * 10} $DeTA
                             </span>
                             <button
                               onClick={() => toggleCollapse(pair.id)}
