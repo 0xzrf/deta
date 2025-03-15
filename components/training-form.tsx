@@ -215,6 +215,9 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
 
         if (response.data.result.data.json.success) {
           toast.success("Successfully submitted the qa pair.")
+          setTimeout(() => {
+            window.location.reload()
+          }, 3000)
         }
 
         setIsProcessing(false)
