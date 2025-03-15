@@ -31,12 +31,6 @@ interface QAPair {
   validationMessage?: string
 }
 
-type _FileUploadState = {
-  file: File | null
-  preview: QAPair[] | null
-  error: string | null
-}
-
 export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multiplier, verified, dataLoading }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean, multiplier: number, verified: boolean, dataLoading: boolean }) {
   const { connected, publicKey } = useWallet()
   const router = useRouter()
@@ -298,6 +292,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
         answer: 0
       })
     } else {
+      console.log("Qa pairs:; ", qaPairs)
       handleAddPair()
     }
   }
@@ -383,7 +378,9 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                 }
               </div>
 
-              {qaPairs.map((pair) => (
+              {qaPairs.map((pair) => { 
+                console.log(`Question length: ${pair.question.length}, Answer length: ${pair.answer.length}, multiplier: ${multiplier}, result: ${pair.question.length + pair.answer.length * multiplier * 10}`)                
+                return (
                 <div
                   key={pair.id}
                   className="rounded-lg border border-white/10 bg-black/20 p-3" // Reduced padding
@@ -489,7 +486,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                     </div>
                   )}
                 </div>
-              ))}
+              )})}
             </div>
 
             {/* Add this Submit Button section */}
