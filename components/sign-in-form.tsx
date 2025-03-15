@@ -29,7 +29,7 @@ export default function SignInForm() {
       await new Promise((resolve) => setTimeout(resolve, 1000))
       
       // Redirect to dashboard or handle the sign-in logic
-      router.push('/dashboard')
+      router.push('/dashboard?tab=contribute')
     } catch (error) {
       console.error('Sign in failed:', error)
     } finally {
