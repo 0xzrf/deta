@@ -117,6 +117,8 @@ function ProfileContent() {
 
       const multiplier = (1 + (((approval_rate - 50) / 50) ** 2 ) * 0.5).toString() || "1"
 
+      console.log("Multiplier:", multiplier)
+
       const data: UserData = {
         address: response1.data.address,
         approved,
