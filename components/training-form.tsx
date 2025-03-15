@@ -379,7 +379,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
               </div>
 
               {qaPairs.map((pair) => { 
-                console.log(`Question length: ${pair.question.length}, Answer length: ${pair.answer.length}, multiplier: ${multiplier}, result: ${pair.question.length + pair.answer.length * multiplier * 10}`)                
+                // console.log(`Question length: ${pair.question.length}, Answer length: ${pair.answer.length}, multiplier: ${multiplier}, result: ${pair.question.length + pair.answer.length * multiplier * 10}`)                
                 return (
                 <div
                   key={pair.id}
@@ -404,9 +404,9 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gradient">
+                        {/* <span className="text-sm text-gradient">
                           {pair.question.length + pair.answer.length * multiplier * 10} $DeTA
-                        </span>
+                        </span> */}
                         <button
                           onClick={() => toggleCollapse(pair.id)}
                           className="p-1 text-gray-400 hover:text-white"
