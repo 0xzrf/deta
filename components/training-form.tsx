@@ -479,9 +479,6 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                             rows={3}
                           />
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-gradient">
-                              Estimated: {qaCount.question + qaCount.answer * multiplier * 10} $DeTA
-                            </span>
                             <button
                               onClick={() => toggleCollapse(pair.id)}
                               className="rounded-md px-3 py-1 text-sm text-gray-400 hover:text-white"
