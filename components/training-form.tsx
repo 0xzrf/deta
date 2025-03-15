@@ -295,6 +295,10 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
   const handleAddPairClick = () => {
     if (qaCount.question <= 10 || qaCount.answer <= 10) {
       setShowLengthModal(true)
+      setQaCount({
+        question: 0,
+        answer: 0
+      })
     } else {
       handleAddPair()
     }
