@@ -115,7 +115,11 @@ function ProfileContent() {
 
       const approval_rate = (approved / submissions) * 100;
 
-      const multiplier = (1 + (((approval_rate - 50) / 50) ** 2 ) * 0.5).toString() || "1"
+      let multiplier = (1 + (((approval_rate - 50) / 50) ** 2 ) * 0.5).toString() || "1"
+
+      if (isNaN(Number(multiplier))) {
+        multiplier = "1"
+      }
 
       console.log("Multiplier:", multiplier)
 
