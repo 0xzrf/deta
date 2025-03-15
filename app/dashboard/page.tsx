@@ -115,7 +115,7 @@ function ProfileContent() {
 
       const approval_rate = (approved / submissions) * 100;
 
-      const multiplier = (1 + (((approval_rate - 50) / 50) ** 2 ) * 0.5).toString()
+      const multiplier = (1 + (((approval_rate - 50) / 50) ** 2 ) * 0.5).toString() || "1"
 
       const data: UserData = {
         address: response1.data.address,
