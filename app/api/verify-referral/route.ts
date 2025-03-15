@@ -9,19 +9,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false });
     }
 
-
-
     // Check if referral code exists and is unused
     const referral = await prisma.waitlist.findUnique({
       where: {
         referral_code: referralCode,
-        used: false,
       },
     });
 
     // If referral code not found or already used
-    if (!referralCode) {
-      return NextResponse.json({ success: false });
+    if (!referral) {
+      return NextResponse.json({ success: false, msg: "Referral code not found" });
+    }
+
+    if (referral.used) {
+      return NextResponse.json({ success: false, msg: "Referral code already used" });
     }
 
     // Update user verification status and mark referral as used

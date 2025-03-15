@@ -13,11 +13,16 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useWallet } from '@solana/wallet-adapter-react'
+import axios from 'axios'
+import { toast, Toaster } from 'sonner'
+
 
 export default function SignInForm() {
   const [referralCode, setReferralCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { publicKey } = useWallet()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,8 +31,17 @@ export default function SignInForm() {
     try {
       // Here you would typically validate the referral code with your backend
       // For now, we'll just simulate a delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await axios.post('/api/verify-referral', {
+        referralCode,
+        walletAddress: publicKey?.toString(),
+      })
       
+      if (!response.data.success) {
+        toast.error(response.data.msg)
+        setIsLoading(false)
+        return
+      }
+
       // Redirect to dashboard or handle the sign-in logic
       router.push('/dashboard?tab=contribute')
     } catch (error) {
@@ -71,6 +85,7 @@ export default function SignInForm() {
           </Button>
         </form>
       </CardContent>
+      <Toaster />
     </Card>
   )
 }

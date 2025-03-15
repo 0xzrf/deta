@@ -65,6 +65,7 @@ function ProfileContent() {
   const [isHowToOpen, setIsHowToOpen] = useState(false)
   const [signedIn, setSignedIn] = useState(true)
   const [userData, setUserData] = useState<UserData | null>(null)
+  const [dataLoading, setDataLoading] = useState(true)
   const [personalSubmissions, setPersonalSubmissions] = useState<Submission[]>([])
 
   useEffect(() => {
@@ -129,7 +130,10 @@ function ProfileContent() {
         verified: response1.data.user.verified
       }
 
+      console.log("Data::::", data)
+
       setUserData (data)
+      setDataLoading(false)
       setSignedIn(true)
 
     })()
@@ -368,6 +372,7 @@ function ProfileContent() {
                 bonus_claimed={userData?.bonus_claimed || false}
                 multiplier={parseFloat(userData?.multiplier || "1")}
                 verified={userData?.verified || false}
+                dataLoading={dataLoading}
               />
             </div>
           )}

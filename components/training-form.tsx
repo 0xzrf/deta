@@ -37,7 +37,7 @@ type _FileUploadState = {
   error: string | null
 }
 
-export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multiplier, verified }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean, multiplier: number, verified: boolean }) {
+export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multiplier, verified, dataLoading }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean, multiplier: number, verified: boolean, dataLoading: boolean }) {
   const { connected, publicKey } = useWallet()
   const router = useRouter()
   const [qaPairs, setQaPairs] = useState<QAPair[]>([{
@@ -187,9 +187,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
   const handleSubmit = async () => {
     try {
       setIsProcessing(true)
-      console.log("verified", verified)
 
-      console.log("I'm here")
       const checkRequest = await axios.get("https://www.detaprotocol.com/api/waitlist/stats")
 
       const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
@@ -496,24 +494,31 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
 
             {/* Add this Submit Button section */}
             <div className="mt-8">
-              <button
-                onClick={handleSubmit}
-                className="w-full px-6 py-3 rounded-full bg-[#00FF95] text-black
-                    font-medium text-lg hover:bg-[#00FF95]/90 transition-colors
-                    disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isProcessing || (qaPairs.length - 1) + qaPairsinput.length === 0}
-                aria-busy={isProcessing}
-                aria-disabled={isProcessing || qaPairs.length === 0}
-              >
-                {isProcessing ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Processing...
+              <div className="relative group">
+                {dataLoading && (
+                  <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-black/90 text-white text-sm rounded-md px-3 py-1.5 whitespace-nowrap">
+                    User metadata is loading, please wait
                   </div>
-                ) : (
-                  `Submit ${(qaPairs.length - 1) + qaPairsinput.length}  Pair${qaPairs.length !== 1 ? 's' : ''}`
                 )}
-              </button>
+                <button
+                  onClick={handleSubmit}
+                  className="w-full px-6 py-3 rounded-full bg-[#00FF95] text-black
+                      font-medium text-lg hover:bg-[#00FF95]/90 transition-colors
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isProcessing || (qaPairs.length - 1) + qaPairsinput.length === 0 || dataLoading}
+                  aria-busy={isProcessing || dataLoading}
+                  aria-disabled={isProcessing || qaPairs.length === 0 || dataLoading}
+                >
+                  {isProcessing ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Processing...
+                    </div>
+                  ) : (
+                    `Submit ${(qaPairs.length - 1) + qaPairsinput.length}  Pair${qaPairs.length !== 1 ? 's' : ''}`
+                  )}
+                </button>
+              </div>
             </div>
           </>
         </div>
@@ -663,23 +668,31 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                 )}
               </AnimatePresence>
             </div>
-            <button
-              onClick={claimRewards}
-              className="w-full rounded-full px-4 py-3 text-base font-medium
-                bg-[#00FF95] text-black hover:bg-[#00FF95]/90
-                transition-all duration-300 flex items-center justify-center gap-2
-                disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!connected || isClaimLoading}
-            >
-              {isClaimLoading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Claiming...
-                </>
-              ) : (
-                `Claim ${claimable} $DeTA`
+            <div className="relative group">
+              {dataLoading && (
+                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 hidden group-hover:block 
+                  bg-black/90 text-white text-sm rounded-md px-3 py-1.5 whitespace-nowrap">
+                  User metadata is loading, please wait
+                </div>
               )}
-            </button>
+              <button
+                onClick={claimRewards}
+                className="w-full rounded-full px-4 py-3 text-base font-medium
+                  bg-[#00FF95] text-black hover:bg-[#00FF95]/90
+                  transition-all duration-300 flex items-center justify-center gap-2
+                  disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!connected || isClaimLoading || dataLoading}
+              >
+                {isClaimLoading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Claiming...
+                  </>
+                ) : (
+                  `Claim ${claimable} $DeTA`
+                )}
+              </button>
+            </div>
 
           </div>
         </div>
