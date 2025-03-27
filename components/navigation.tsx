@@ -13,6 +13,7 @@ export function Navigation() {
   const { connected, publicKey, disconnect } = useWallet()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const pathname = usePathname()
 
   const isDashboard = pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname.startsWith('/analytics')
@@ -25,6 +26,17 @@ export function Navigation() {
     }
     setVisible(true)
     console.log("Connected wallet")
+  }
+
+  const closeMenu = () => {
+    console.log("Close menu clicked")
+    setIsClosing(true)
+    
+    setTimeout(() => {
+      setIsMobileMenuOpen(false)
+      setIsClosing(false)
+      console.log("Menu closed")
+    }, 300)
   }
 
   const communityLinks = [
@@ -58,7 +70,7 @@ export function Navigation() {
         </div>
 
         <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onClick={() => isMobileMenuOpen ? closeMenu() : setIsMobileMenuOpen(true)}
           className="lg:hidden p-2 text-gray-300 hover:text-white"
         >
           {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -98,7 +110,10 @@ export function Navigation() {
           {/* Community Dropdown */}
           <div className="relative">
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              onClick={() => {
+                setIsDropdownOpen(!isDropdownOpen)
+                console.log("Dropdown open", isDropdownOpen)
+              }}
               className="flex items-center gap-1 text-sm text-gray-300 hover:text-white transition-colors"
             >
               Community
@@ -156,8 +171,23 @@ export function Navigation() {
 
       {/* Mobile Menu - Only show on landing page */}
       {!isDashboard && isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-lg">
-          <div className="flex flex-col items-center justify-center h-full space-y-8">
+        <div 
+          className={`lg:hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-lg transition-all duration-300 ease-in-out ${
+            isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+          }`}
+        >
+          {/* Close button */}
+          <button 
+            onClick={closeMenu}
+            className="absolute top-6 right-6 text-gray-300 hover:text-white transition-colors z-10"
+            aria-label="Close menu"
+          >
+            <X className="h-8 w-8 transform transition-transform duration-300 hover:rotate-90" />
+          </button>
+
+          <div className={`flex flex-col items-center justify-center h-full space-y-8 transition-all duration-300 ${
+            isClosing ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+          }`}>
             {/* Mobile Links */}
             <a
               href="https://github.com/yourusername/your-repo"

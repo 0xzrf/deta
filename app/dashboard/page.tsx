@@ -67,6 +67,52 @@ function ProfileContent() {
   const [userData, setUserData] = useState<UserData | null>(null)
   const [dataLoading, setDataLoading] = useState(true)
   const [personalSubmissions, setPersonalSubmissions] = useState<Submission[]>([])
+  const [bigDataLoading, setBigDataLoading] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setBigDataLoading(true);
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array means this runs once on mount
+
+  useEffect(() => {
+    (async () => {
+      if (!bigDataLoading) return;
+
+      const response = await axios.get(`/api/trpc/qa.list?input={"json":{}}`)
+
+      console.log("Global dataaa:", response.data.result.data)
+
+      const pairs = response.data.result.data
+
+      const submissions = pairs.json.pairs.map((data: userSubmission) => {
+
+        const returnData: Submission = {
+          category: data.category ? data.category : "Unclassified",
+          id: Math.floor(Math.random() * 10).toString(),
+          question: data.question,
+          status: data.classification == null ? "pending" : (data.classification == "approved" ? "approved" : 'rejected'),
+          timestamp: new Date(data.createdAt),
+          user: data.walletAddress.toString(),
+          reward: data.tokens
+        }
+
+        return returnData
+      })
+
+      const sortedArr = submissions.sort((a: {timestamp: any}, b: {timestamp: any}) => a.timestamp - b.timestamp)
+
+      const filteredArr = sortedArr.filter((sub: any) => {
+        return sub.user === wallet?.publicKey?.toString()
+      })
+
+      setGlobalSubmissions(sortedArr)
+
+    })()
+
+  }, [bigDataLoading, wallet?.publicKey]) // Added bigDataLoading to dependencies
 
   useEffect(() => {
     (async () => {
@@ -146,46 +192,6 @@ function ProfileContent() {
 
   }, [wallet.publicKey])
 
-
-  useEffect(() => {
-    (async () => {
-
-      const response = await axios.get(`/api/trpc/qa.list?input={"json":{}}`)
-
-      console.log("Global dataaa:", response.data.result.data)
-
-      const pairs = response.data.result.data
-
-      const submissions = pairs.json.pairs.map((data: userSubmission) => {
-
-        const returnData: Submission = {
-          category: data.category ? data.category : "Unclassified",
-          id: Math.floor(Math.random() * 10).toString(),
-          question: data.question,
-          status: data.classification == null ? "pending" : (data.classification == "approved" ? "approved" : 'rejected'),
-          timestamp: new Date(data.createdAt),
-          user: data.walletAddress.toString(),
-          reward: data.tokens
-        }
-
-        return returnData
-      })
-
-      const sortedArr = submissions.sort((a: {timestamp: any}, b: {timestamp: any}) => a.timestamp - b.timestamp)
-
-      const filteredArr = sortedArr.filter((sub: any) => {
-        return sub.user === wallet?.publicKey?.toString()
-      })
-
-      console.log("wallet.publicKey", wallet?.publicKey?.toString())
-
-      console.log("filteredArr", filteredArr)
-
-      setGlobalSubmissions(sortedArr)
-
-    })()
-
-  }, [wallet?.publicKey])
 
   const tabs = [
     {
@@ -379,6 +385,7 @@ function ProfileContent() {
                 multiplier={parseFloat(userData?.multiplier || "1")}
                 verified={userData?.verified || false}
                 dataLoading={dataLoading}
+                globalData={globalSubmissions}
               />
             </div>
           )}

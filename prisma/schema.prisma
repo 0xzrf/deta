@@ -20,6 +20,7 @@ model User {
   total_earned  Int    @default(0)
   bonus_claimed Boolean @default(false)
   verified      Boolean @default(false)
+  @@index([address])
 }
 
 model Global {

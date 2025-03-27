@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import {
   ChevronDown, Plus, X, Info, Upload,
   Clock, Loader2, CheckCircle, XCircle,
@@ -31,7 +31,7 @@ interface QAPair {
   validationMessage?: string
 }
 
-export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multiplier, verified, dataLoading }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean, multiplier: number, verified: boolean, dataLoading: boolean }) {
+export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multiplier, verified, dataLoading, globalData }: { earned: number, claimed: number, claimable: number, totalClaimable: number, bonus_claimed: boolean, multiplier: number, verified: boolean, dataLoading: boolean, globalData: any }) {
   const { connected, publicKey } = useWallet()
   const router = useRouter()
   const [qaPairs, setQaPairs] = useState<QAPair[]>([{
@@ -54,6 +54,10 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
     answer: 0
   })
   const [showLengthModal, setShowLengthModal] = useState(false)
+
+  useEffect(() => {
+    console.log("First 3 elements:", globalData?.slice(0, 3))
+  }, [globalData])
 
   const handleAddPair = () => {
     const lastPair = qaPairs[qaPairs.length - 1]
@@ -350,7 +354,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                   </div>
                   <div className="w-px h-4 bg-white/10"></div>
                   <div className="text-sm text-gray-400">
-                    Estimated: <span className="text-gradient font-medium">{(qaPairsinput.length + qaPairs.length - 1 ) * 500 * multiplier} $DeTA</span>
+                    Estimated: <span className="text-gradient font-medium">{(qaPairsinput.length + qaPairs.length - 1) * 500 * multiplier} $DeTA</span>
                   </div>
                 </div>
                 {
@@ -381,115 +385,116 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                 }
               </div>
 
-              {qaPairs.map((pair) => { 
+              {qaPairs.map((pair) => {
                 // console.log(`Question length: ${pair.question.length}, Answer length: ${pair.answer.length}, multiplier: ${multiplier}, result: ${pair.question.length + pair.answer.length * multiplier * 10}`)                
                 return (
-                <div
-                  key={pair.id}
-                  className="rounded-lg border border-white/10 bg-black/20 p-3" // Reduced padding
-                >
-                  {pair.isCollapsed ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-white truncate">
-                          Q: {pair.question}
-                        </p>
-                        <p className="text-sm text-gray-400 truncate">
-                          A: {pair.answer}
-                        </p>
-                        {pair.validationStatus && (
-                          <div className="mt-2">
-                            <ValidationStatus
-                              status={pair.validationStatus}
-                              message={pair.validationMessage}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {/* <span className="text-sm text-gradient">
+                  <div
+                    key={pair.id}
+                    className="rounded-lg border border-white/10 bg-black/20 p-3" // Reduced padding
+                  >
+                    {pair.isCollapsed ? (
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white truncate">
+                            Q: {pair.question}
+                          </p>
+                          <p className="text-sm text-gray-400 truncate">
+                            A: {pair.answer}
+                          </p>
+                          {pair.validationStatus && (
+                            <div className="mt-2">
+                              <ValidationStatus
+                                status={pair.validationStatus}
+                                message={pair.validationMessage}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {/* <span className="text-sm text-gradient">
                           {pair.question.length + pair.answer.length * multiplier * 10} $DeTA
                         </span> */}
-                        <button
-                          onClick={() => toggleCollapse(pair.id)}
-                          className="p-1 text-gray-400 hover:text-white"
-                        >
-                          <ChevronDown className="h-4 w-4" />
-                        </button>
-                        {!isProcessing && (
                           <button
-                            onClick={() => removePair(pair.id)}
-                            className="p-1 text-gray-400 hover:text-red-500"
+                            onClick={() => toggleCollapse(pair.id)}
+                            className="p-1 text-gray-400 hover:text-white"
                           >
-                            <X className="h-4 w-4" />
+                            <ChevronDown className="h-4 w-4" />
                           </button>
-                        )}
+                          {!isProcessing && (
+                            <button
+                              onClick={() => removePair(pair.id)}
+                              className="p-1 text-gray-400 hover:text-red-500"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {
-                        !fileUploaded &&
-                        <>
+                    ) : (
+                      <div className="space-y-3">
+                        {
+                          !fileUploaded &&
+                          <>
 
-                          <div className="flex items-center gap-2">
-                            <label className="text-sm font-medium text-gray-300">
-                              Question
-                            </label>
-                            <button
-                              onClick={() => setShowExampleModal('question')}
-                              className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
-                            >
-                              example
-                            </button>
-                          </div>
-                          <textarea
-                            value={pair.question}
-                            onChange={(e) => {
-                              handleChange(pair.id, 'question', e.target.value)
-                              setQaCount(prev => ({ ...prev, question: e.target.value.length }))
-                            }}
-                            onKeyPress={(e) => handleKeyPress(e, pair.id)}
-                            className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
-                            placeholder="Enter your question..."
-                            rows={2}
-                          />
-                          <div className="flex items-center gap-2">
-                            <label className="text-sm font-medium text-gray-300">
-                              Answer
-                            </label>
-                            <button
-                              onClick={() => setShowExampleModal('answer')}
-                              className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
-                            >
-                              example
-                            </button> 
-                          </div>
-                          <textarea
-                            value={pair.answer}
-                            onChange={(e) => {
-                              handleChange(pair.id, 'answer', e.target.value)
-                              setQaCount(prev => ({ ...prev, answer: e.target.value.length }))
-                            }}
-                            onKeyPress={(e) => handleKeyPress(e, pair.id)}
-                            className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
-                            placeholder="Enter your answer..."
-                            rows={3}
-                          />
-                          <div className="flex justify-between items-center">
-                            <button
-                              onClick={() => toggleCollapse(pair.id)}
-                              className="rounded-md px-3 py-1 text-sm text-gray-400 hover:text-white"
-                            >
-                              Collapse
-                            </button>
-                          </div>
-                        </>
-                      }
-                    </div>
-                  )}
-                </div>
-              )})}
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium text-gray-300">
+                                Question
+                              </label>
+                              <button
+                                onClick={() => setShowExampleModal('question')}
+                                className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
+                              >
+                                example
+                              </button>
+                            </div>
+                            <textarea
+                              value={pair.question}
+                              onChange={(e) => {
+                                handleChange(pair.id, 'question', e.target.value)
+                                setQaCount(prev => ({ ...prev, question: e.target.value.length }))
+                              }}
+                              onKeyPress={(e) => handleKeyPress(e, pair.id)}
+                              className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
+                              placeholder="Enter your question..."
+                              rows={2}
+                            />
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium text-gray-300">
+                                Answer
+                              </label>
+                              <button
+                                onClick={() => setShowExampleModal('answer')}
+                                className="text-xs text-[#00FF95] hover:text-[#00FF95]/80"
+                              >
+                                example
+                              </button>
+                            </div>
+                            <textarea
+                              value={pair.answer}
+                              onChange={(e) => {
+                                handleChange(pair.id, 'answer', e.target.value)
+                                setQaCount(prev => ({ ...prev, answer: e.target.value.length }))
+                              }}
+                              onKeyPress={(e) => handleKeyPress(e, pair.id)}
+                              className="w-full rounded-md border border-white/10 bg-black/20 px-4 py-2 text-white placeholder-gray-400"
+                              placeholder="Enter your answer..."
+                              rows={3}
+                            />
+                            <div className="flex justify-between items-center">
+                              <button
+                                onClick={() => toggleCollapse(pair.id)}
+                                className="rounded-md px-3 py-1 text-sm text-gray-400 hover:text-white"
+                              >
+                                Collapse
+                              </button>
+                            </div>
+                          </>
+                        }
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
 
             {/* Add this Submit Button section */}
@@ -616,53 +621,35 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
                   >
                     <div className="space-y-4 mt-4">
                       {/* Session Items */}
-                      <div className="rounded-lg bg-black/20 p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm text-gray-400">Today, 2:30 PM</p>
-                          <span className="text-sm text-success">+12.4 $DeTA</span>
+                      {globalData?.length === 0 ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                          <p className="text-sm text-gray-400">Latest sessions loading. Please wait...</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="text-xs text-gray-400">
-                            <span className="text-white">8</span> pairs submitted
+                      ) : (
+                        globalData?.filter((item: any) => item.reward != null)?.slice(0, 3).map((item: any) => (
+                          <div className="rounded-lg bg-black/20 p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-sm text-gray-400">
+                                {(() => {
+                                  const itemDate = new Date(item.timestamp).setHours(0,0,0,0);
+                                  const today = new Date().setHours(0,0,0,0);
+                                  const yesterday = new Date(today - 86400000);
+                                  
+                                  if(itemDate === today) return "Today";
+                                  if(itemDate === yesterday.setHours(0,0,0,0)) return "Yesterday";
+                                  return new Date(item.timestamp).toLocaleDateString();
+                                })()}
+                              </p>
+                              <span className="text-sm text-success">+{item.reward} $DeTA</span>
+                            </div>
+                            <div className="flex items-center justify-between w-full">
+                              <span className="text-xs text-gray-400">By pubkey:</span>
+                              <span className="text-xs text-gray-400">{item.user.slice(0, 4)}...{item.user.slice(-4)}</span>
+                            </div>
                           </div>
-                          <span className="text-gray-500">•</span>
-                          <div className="text-xs text-gray-400">
-                            <span className="text-white">6</span> approved
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg bg-black/20 p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm text-gray-400">Yesterday</p>
-                          <span className="text-sm text-success">+8.6 $DeTA</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="text-xs text-gray-400">
-                            <span className="text-white">5</span> pairs submitted
-                          </div>
-                          <span className="text-gray-500">•</span>
-                          <div className="text-xs text-gray-400">
-                            <span className="text-white">4</span> approved
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg bg-black/20 p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm text-gray-400">Mar 15, 2024</p>
-                          <span className="text-sm text-success">+15.8 $DeTA</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="text-xs text-gray-400">
-                            <span className="text-white">10</span> pairs submitted
-                          </div>
-                          <span className="text-gray-500">•</span>
-                          <div className="text-xs text-gray-400">
-                            <span className="text-white">8</span> approved
-                          </div>
-                        </div>
-                      </div>
+                        ))
+                      )}
                     </div>
                   </motion.div>
                 )}
