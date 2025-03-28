@@ -120,7 +120,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
       const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
 
       if (match || verified) {
-        const response = await axios.post(`https://deta-server-silk.vercel.app/api/distribute`, {
+        const response = await axios.post(`https://deta-server-zeta.vercel.app/api/distribute`, {
           contributorKey: publicKey?.toString()
         })
 
