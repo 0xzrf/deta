@@ -219,6 +219,18 @@ export function Navigation() {
           }`}>
             {/* Mobile Links */}
             
+            {isDashboard && (
+              <>
+                <Link
+                  href="/analytics"
+                  className="flex items-center gap-2 text-lg text-gray-300 hover:text-white transition-colors"
+                >
+                  <TrendingUp className="h-5 w-5" />
+                  <span>Analytics & progress</span>
+                </Link>
+              </>
+            )}
+
             <Link
               href="/dashboard?tab=performance"
               className="flex items-center gap-2 text-lg text-gray-300 hover:text-white transition-colors"

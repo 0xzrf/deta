@@ -572,7 +572,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
               {
                 !bonus_claimed && (
                   <a
-                    href={`https://x.com/intent/tweet?text=Hello word`}
+                    href={`https://x.com/intent/tweet?text=Just claimed ${claimed} $DeTA on @detaprotocol via detaprotocol.com`}
                     target="_blank"
                     className=" rounded-full px-4 py-3 text-base font-medium
                 bg-[#00FF95] text-black hover:bg-[#00FF95]/90
