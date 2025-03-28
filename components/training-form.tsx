@@ -115,7 +115,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
 
     setIsClaimLoading(true)
     try {
-      const checkRequest = await axios.get("https://www.detaprotocol.com/api/waitlist/stats")
+      const checkRequest = await axios.get("https://www.detaprotocol.org/api/waitlist/stats")
 
       const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
 
@@ -186,7 +186,7 @@ export function TrainingForm({ earned, claimed, claimable, bonus_claimed, multip
     try {
       setIsProcessing(true)
 
-      const checkRequest = await axios.get("https://www.detaprotocol.com/api/waitlist/stats")
+      const checkRequest = await axios.get("https://www.detaprotocol.org/api/waitlist/stats")
 
       const match = checkRequest.data.data.topReferrers.find((referrer: any) => referrer.address === publicKey?.toString())
 
